@@ -573,3 +573,517 @@ try(
 
 ```
 
+
+
+## JDBC： Java DataBase Connectivity
+
+### 一，使用
+
+导入jar包，根据不同版本导入
+
+```
+mysql-connector-java-5.0.8-bin-jar
+```
+
+注册驱动
+
+```
+Class.forName("com.mysql.jdbc.Driver");
+```
+
+取数据库连接对象 Connection
+
+```
+Connection 	= DriverManager.getConnection("jdbc:mysql://localhost:3306/db3", "root", "root");
+```
+
+定义sql
+
+```
+String sql = "update account set balance = 500 where id = 1";
+```
+
+获取执行sql语句的对象 Statement
+
+```
+Statement stmt = conn.createStatement();
+```
+
+行sql，接受返回结果
+
+```
+int count = stmt.executeUpdate(sql);
+```
+
+处理结果，释放资源
+
+```
+stmt.close();
+conn.close();
+```
+
+
+
+### 二，具体对象
+
+#### DriverManager：驱动管理对象
+
+1，告诉程序该使用哪一个数据库驱动
+
+```java
+//通过查看源码发现：在com.mysql.jdbc.Driver类中存在静态代码块
+static {
+     try {
+        java.sql.DriverManager.registerDriver(new Driver());
+	 } catch (SQLException E) {
+		throw new RuntimeException("Can't register driver!");
+	 }
+}
+```
+
+写代码就只用
+
+```
+Class.forName("com.mysql.jdbc.Driver");//sql5.7版本前
+Class.forName("com.mysql.cj.jdbc.Driver");//sql5.7版本后
+```
+
+2，获取数据库连接
+
+```
+static Connection getConnection(String url, String user, String password)
+```
+
+
+
+#### Connection：数据库连接对象
+
+1，获取执行sql对象
+
+```
+Statement createStatement()
+PreparedStatement prepareStatement(String sql)
+```
+
+2，管理实务
+
+
+
+#### Statement：执行sql的对象
+
+```
+1. boolean execute(String sql) ：可以执行任意的sql 
+2. int executeUpdate(String sql) ：执行DML语句、DDL语句
+3. ResultSet executeQuery(String sql)  ：执行DQL（select)语句
+```
+
+
+
+executeUpdate()方法的返回值：**影响的行数**，**可以通过这个影响的行数判断DML语句是否执行成功** 返回值>0的则执行成功，反之，则失败
+
+
+
+#### ResultSet：结果集对象,封装查询结果
+
+```java
+boolean next():
+//游标向下移动一行，判断当前行是否是最后一行末尾(是否有数据)，如果是，则返回false，如果不是则返回true
+```
+
+  
+
+```
+getXxx(参数):获取数据 
+```
+
+Xxx：代表数据类型 
+
+1. int：代表列的编号,从1开始  如： getString(1) 
+2. String：代表列名称。 如： getDouble("balance")
+
+注意：resultSet的索引是从1开始的
+
+
+
+####  PreparedStatement：执行sql的对象
+
+SQL注入问题：在拼接sql时，有一些sql的特殊关键字参与字符串的拼接。会造成安全性问题
+
+> 输入密码：a' or 'a' = 'a
+>
+> ```
+> 而执行的sql：select * from user where username = 'fhdsjkf' and password = 'a' or 'a' = 'a' 
+> ```
+
+解决：参数使用?作为占位符
+
+那么定义的sql
+
+```sql
+select * from user where username = ? and age = ?;
+```
+
+而执行sql的对象就换为
+
+```java
+PreparedStatement preparedStatement  = Connection.prepareStatement(String sql);
+```
+
+接着就是赋值
+
+```
+方法： setXxx(参数1,参数2)
+	* 参数1：？的位置编号 从1 开始
+	* 参数2：？的值
+
+preparedStatement.setString(1,"图图");
+preparedStatement.setInt(1,18);
+```
+
+
+
+### 三，JDBC工具类
+
+1，需要使用jdbc.properties配置文件保存数据源信息
+
+```
+driver=数据库驱动路径
+url=url连接字符串
+user=用户名
+password=密码
+```
+
+2，实现配置类
+
+```java
+public class JDBCUtil{
+    private static String url;
+    private static String user;
+    private static String password;
+    private static String driver;
+    // 使用静态代码注册驱动并给静态变量赋值
+    static{
+        try {
+            // 创建Properties集合类
+            Properties pro = new Properties();
+            // 获取src路径下文件，使用ClassLoader类加载器
+            ClassLoader classLoader = JDBCUtils.class.getClassLoader();
+            // URL定位了文件的绝对路径
+            URL res = classLoader.getResource("jdbc.properties");
+            // 获取字符串路径
+            String path = res.getPath();
+            // 读取文件
+            pro.load(new FileReader(path));
+            // 给静态变量赋值
+            url = pro.getProperty("url");
+            user = pro.getProperty("user");
+            password = pro.getProperty("password");
+            driver = pro.getProperty("driver");
+            // 注册驱动
+            Class.forName(driver);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    //获取连接
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
+	}
+    //释放资源
+    public static void close(Statement stmt, Connection conn){
+        if(stmt != null){
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        if(conn != null){
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+}
+```
+
+
+
+### 四，JDBC控制事务
+
+> 这些东西个人认为在mysql知识点中详细归纳比较好，毕竟那些框架都对事物有良好的支持
+
+#### 1，开启事务
+
+```java
+Connection.setAutoCommit(boolean autoCommit);
+//调用该方法设置参数为false，即开启事务
+```
+
+#### 2，提交事务
+
+```
+Connection.commit();
+```
+
+#### 3，回滚事务
+
+```
+Connection.rollback(); 
+```
+
+
+
+### 五，数据库连接池
+
+其实就是一个容器(集合)，存放数据库连接的容器。
+
+当系统初始化好后，容器被创建，容器中会申请一些连接对象，当用户来访问数据库时，从容器中获取连接对象，**用户访问完之后，会将连接对象归还给容器**
+
+实现方式
+
+
+
+### 六，SpringJDBC
+
+1，导入jar包
+
+2，创建JdbcTemplate对象
+
+```JAVA
+//依赖于数据源DataSource
+JdbcTemplate template = new JdbcTemplate(dataSource);
+```
+
+3，调用JdbcTemplate的方法来完成CRUD的操作
+
+```JAVA
+update(): 执行DML语句。增、删、改语句
+
+queryForMap():查询结果将结果集封装为map集合
+//将列名作为key，将值作为value 将这条记录封装为一个map集合
+//注意：这个方法查询的结果集长度只能是1
+
+queryForList():查询结果将结果集封装为list集合
+//注意：将每一条记录封装为一个Map集合，再将Map集合装载到List集合中
+
+query():查询结果，将结果封装为JavaBean对象
+//query的参数：RowMapper
+//一般我们使用BeanPropertyRowMapper实现类。可以完成数据到JavaBean的自动封装
+//new BeanPropertyRowMapper<类型>(类型.class)
+
+queryForObject()：查询结果，将结果封装为对象
+//一般用于聚合函数的查询
+```
+
+
+
+## 多线程
+
+> 多线程往往是java的一个性能重点，所以需要单独一个笔记讲述多线程
+>
+> 需要我查阅更多的书籍后才能对其统计知识点
+
+
+
+
+
+## 反射
+
+### 一，概念
+
+**对于任何一个对象，我们都能够对它的方法和属性进行调用**。我们把这种**动态获取对象信息和调用对象方法**的功能称之为**反射机制**。
+
+> 我们使用的一些主流框架中反射技术应用是非常广泛的.
+>
+> 所谓反射其实是获取类的字节码文件，也就是.class文件，那么我们就可以通过Class这个对象进行获取
+
+
+
+### 二，实现反射的方式
+
+第一种：通过Object类的getClass方法 
+
+```
+Class cla = foo.getClass();
+```
+
+第二种：通过对象实例方法获取对象 
+
+```
+Class cla = foo.class;
+```
+
+第三种：通过Class.forName方式 
+
+```java
+Class cla = Class.forName("全类名");
+cla.newInstance()//初始化对象，接着就是使用对象了
+```
+
+
+
+### 三，相关的逻辑方法
+
+```java
+getMethod(parameterTypes)用来获取某个公有的方法的对象
+getMethods()获得该类所有公有的方法
+getDeclaredMethod(parameterTypes)获得该类某个方法
+getDeclaredMethods()获得该类所有方法
+```
+
+
+
+## 泛型
+
+### 一，概念
+
+泛型在java中有很重要的地位，在面向对象编程及各种设计模式中有非常广泛的应用
+
+泛型，即“参数化类型”
+
+泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制形参具体限制的类型）
+
+
+
+### 二，一个经典泛型例子
+
+```java
+List arrayList = new ArrayList();
+arrayList.add("aaaa");
+arrayList.add(100);
+
+for(int i = 0; i< arrayList.size();i++){
+    String item = (String)arrayList.get(i);
+  	System.out.printf(item)
+}
+//程序就会报错
+
+java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+//ArrayList可以存放任意类型，例子中添加了一个String类型，添加了一个Integer类型，再使用时都以String的方式使用，因此程序崩溃了
+
+//所以就有了泛型
+
+List<String> arrayList = new ArrayList<String>();
+```
+
+
+
+### 三，特性
+
+泛型只在编译阶段有效
+
+```java
+List<String> stringArrayList = new ArrayList<String>();
+List<Integer> integerArrayList = new ArrayList<Integer>();
+
+Class classStringArrayList = stringArrayList.getClass();
+Class classIntegerArrayList = integerArrayList.getClass();
+
+if(classStringArrayList.equals(classIntegerArrayList)){
+    Log.d("泛型测试","类型相同");
+}
+```
+
+
+
+> 泛型类型在逻辑上看以看成是多个不同的类型，实际上都是相同的基本类型
+
+注意
+
+- 泛型的类型参数只能是类类型，不能是简单类型。
+- 不能对确切的泛型类型使用instanceof操作，编译时会出错
+
+
+
+### 四，分类
+
+#### 1，泛型类
+
+泛型类型用于类的定义中，被称为泛型类
+
+> 最典型的就是各种容器类，如：List、Set、Map
+
+```java
+//此处T可以随便写为任意标识，常见的如T、E、K、V等形式的参数常用于表示泛型
+//在实例化泛型类时，必须指定T的具体类型
+public class Generic<T>{ 
+    //key这个成员变量的类型为T,T的类型由外部指定  
+    private T key;
+
+    public Generic(T key) { //泛型构造方法形参key的类型也为T，T的类型由外部指定
+        this.key = key;
+    }
+
+    public T getKey(){ //泛型方法getKey的返回值类型为T，T的类型由外部指定
+        return key;
+    }
+}
+```
+
+#### 2，泛型接口
+
+泛型接口常被用在各种类的生产器中
+
+```java
+//定义一个泛型接口
+public interface Generator<T> {
+    public T next();
+}
+```
+
+> 实现接口需要声明泛型类型，不然会报错
+
+
+
+#### 3，泛型方法
+
+声明此方法为泛型方法：public  <T>  T 
+
+只有声明了<T>的方法才是泛型方法
+
+```java
+public <T> T genericMethod(){
+        T instance = tClass.newInstance();
+        return instance;
+}
+```
+
+
+
+### 五，泛型通配符
+
+```java
+public void show(Generic<Number> obj){ }
+
+Generic<Integer> gInteger = new Generic<Integer>(123);
+Generic<Number> gNumber = new Generic<Number>(456);
+
+show(gNumber);//程序报错
+
+//	同一种泛型可以对应多个版本（因为参数类型是不确定的），不同版本的泛型类实例是不兼容的
+//	因此我们需要一个在逻辑上可以表示同时是Generic<Integer>和Generic<Number>父类的引用类型。由此类型通配符应运而生
+
+public void show(Generic<?> obj){ }
+```
+
+
+
+### 六，泛型上下边界
+
+
+
+## 集合
+
+> 集合对于面试来讲也是一个大重点，需要额外精力去整理笔记
+
+
+
+## 网络编程
+
+> 网络编程需要我去尝试一个聊天项目后再去整理
