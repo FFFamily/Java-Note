@@ -183,7 +183,6 @@ public void test1(){
 @Select("select * from user where username like #{username} ")
 //这个需要在传递参数的时候加上%号
 @Select("select * from user where username like '%${value}%' ")
-//这个不需要加%号
 ```
 
 
@@ -282,4 +281,269 @@ public interface SqlSession {
         @Result(id = true , column="数据库参数" , property = "实体类名称"),
         })
 ```
+
+
+
+> 或者使用AS
+
+```sql
+select id as userId,username as userName from user;
+```
+
+
+
+2，批注
+
+> 不想去整理那些crud的方法，实际操作就好了，给自己一个偷懒的借口
+
+
+
+
+
+# 七，动态SQL
+
+## if语句
+
+```xml
+<select id="findUserByCondition" resultMap="userMap" parameterType="user">
+        select * from user where 1 = 1 
+            <if test="userName != null">
+                and username = #{userName}
+            </if>
+            //test中的是实体类的参数名称
+            //if标签是数据库中的元素名称
+</select>
+```
+
+
+
+## where语句
+
+```xml
+<select id="findUserByCondition" resultMap="userMap" parameterType="user">
+        select * from user
+        //where标签就代替了where语句
+        <where>
+            <if test="userName != null">
+                and username = #{userName}
+            </if>
+        </where>
+</select>
+```
+
+
+
+## foreach语句
+
+```xml
+ <select id="findUserInIds" resultMap="userMap" parameterType="queryvo">
+        
+        <where>
+            <if test="ids != null and ids.size()>0">
+                <foreach collection="ids" open="and id in (" close=")" item="uid" separator=",">
+                    #{uid}
+                </foreach>
+            </if>
+        </where>
+</select>
+```
+
+-
+
+```xml
+<!-- in查询所有，不分页 -->
+<select id="selectIn" resultMap="BaseResultMap">
+    select name from student where id in
+    <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+        #{item}
+    </foreach>
+</select>
+collection：collection 属性的值有三个分别是 list、array、map
+item ：表示在迭代过程中每一个元素的别名
+index ：表示在迭代过程中每次迭代到的位置（下标）
+open ：前缀
+close ：后缀
+separator ：分隔符，表示迭代时每个元素之间以什么分隔
+```
+
+
+
+额外的配置
+
+mybatis中sql标签与include标签进行配合，灵活的查询需要的数据
+
+```xml
+<sql id="defaultUser">
+        select * from user
+</sql>
+//这样就可以用defaultUser标签中的id代替sql语句了
+
+<include refid="defaultUser"></include>
+
+
+<select id="findUserInIds" resultMap="userMap" parameterType="queryvo">
+        <include refid="defaultUser"></include>
+    <where>
+        <if test="ids != null and ids.size()>0">
+           <foreach collection="" open="" close="" item="" separator="">
+               #{uid}
+           </foreach>
+         </if>
+     </where>
+</select>
+```
+
+
+
+# 八，多表操作
+
+## 1，多对一
+
+第一种：继承
+
+```
+public class User extends Account
+```
+
+-
+
+```xml
+<!--查询所有账户同时包含用户名和地址信息-->
+<select id="findAllAccount" resultType="User">
+	select a.*,u.username,u.address from account a , user u where u.id = a.uid;
+</select>
+```
+
+
+
+第二种：封装
+
+xml
+
+```xml
+<!-- 定义封装account和user的resultMap -->
+<resultMap id="accountUserMap" type="account">
+    <!-- 一对一的关系映射：配置封装user的内容-->
+	<association property="user" column="uid" javaType="user">
+        <id property="userId" column="id"></id>
+        <result column="userName"  property ="userName"></result>
+	</association>
+</resultMap>
+```
+
+注解
+
+```java
+@Results(id = "" ,value = {
+        @Result(),
+        @Result(property="对应的参数名",column="查询需要的参数"
+            one=@One(select="全限定类名" , fetchById= FetchType.EAGER))
+        })
+//FetchType的几个常量
+//1:EAGER——立即加载
+//2:
+```
+
+
+
+## 2，一对多
+
+一对多关系映射：主表实体应该包含从表实体的集合引用
+
+```
+private List<Account> accounts;
+```
+
+xml
+
+```xml
+//一个人是可以有多个账户，每个账户都有其自己的信息
+<resultMap id="userAccountMap" type="uSeR">
+    <!-- 主键字段的对应 -->
+    <id property="userId" column="id"></id>
+    <!--非主键字段的对应-->
+    <result property="userName" column="username"></result>
+    
+//配置user对象中accounts集合的映射
+    <collection property="accounts" ofType="account">
+        <id column="aid" property="id"></id>
+    </collection>
+</resultMap>
+
+<select id="findAll" resultMap="userAccountMap">
+    select * from user u left outer join account a on u.id = a.uid
+</select>
+```
+
+注解
+
+```java
+@Results(id = "" ,value = {
+        @Result(),
+        @Result(property="对应的参数名",column="查询需要的参数"
+            many=@Many(select="全限定类名" , fetchById= FetchType.EAGER))
+        })
+```
+
+
+
+## 3，多对多
+
+
+
+
+
+
+
+
+
+# 七，连接池
+
+配置文件
+
+```
+<properties url="file:///D:/文件/jdbcConfig.properties"></properties>
+```
+
+读取信息
+
+```xml
+<dataSource type="POOLED">
+    <property name="driver" value=""></property>
+    <property name="url" value="${jdbc.url}"></property>
+    <property name="username" value="${jdbc.username}"></property>
+    <property name="password" value="${jdbc.password}"></property>
+</dataSource>
+type=”POOLED”：MyBatis 会创建 PooledDataSource 实例 ，使用链接池
+type=”UNPOOLED” ： MyBatis 会创建 UnpooledDataSource 实例 ，不使用链接池
+type=”JNDI”：MyBatis 会从 JNDI 服务上查找 DataSource 实例，然后返回使用 
+```
+
+使用
+
+
+
+
+
+# 八，事务
+
+
+
+# 九，延迟加载
+
+延迟加载：在真正使用数据时才发起查询，不用的时候不查询。按需加载（懒加载）
+
+立即加载：不管用不用，只要一调用方法，马上发起查询
+
+
+
+> 一对多，多对多：通常情况下我们都是采用延迟加载，例子：查询用户的时候暂时不需要每个账户的信息
+>
+> 
+>
+> 多对一，一对一：通常情况下我们都是采用立即加载。
+
+
+
+## 1，基于XML
 
