@@ -1,6 +1,10 @@
 # Mybatis
 
 > 笔记来源于视频笔记
+>
+> 给自己的话：
+>
+> 这里还有很多知识没涉及到，所以需要自己在动手操作代码的时候，以及有道云的有些知识还没有整理，所以需要在整合的时候好好整理代码笔记
 
 # 一，概念
 
@@ -546,4 +550,152 @@ type=”JNDI”：MyBatis 会从 JNDI 服务上查找 DataSource 实例，然后
 
 
 ## 1，基于XML
+
+```xml
+//在sqlMapConfig.xml文件中配置settings标签
+<settings>
+    <setting name="lazyLoadingEnabled" value="true"/>
+    <setting name="aggressiveLazyLoading" value="false"/>
+</settings>
+cacheEnabled：全局地开启或关闭配置文件中的所有映射器已经配置的任何缓存
+aggressiveLazyLoading：当开启时，任何方法的调用都会加载该对象的所有属性
+                                否则，每个属性会按需加载
+lazyLoadingEnabled：延迟加载的全局开关。当开启时，所有关联对象都会延迟加载。
+```
+
+```xml
+//取而代之的是调用账户dao的查询方法，这样基本上就完成了延迟查找
+//配置user对象中accounts集合的映射
+<collection select="com.tutu.dao.AccountDao.findAll"></collection>
+```
+
+## 2，基于注解
+
+```xml
+//在sqlMapConfig.xml文件中配置settings标签
+<settings>
+    <setting name="cacheEnabled" value="true"/>
+</settings>
+```
+
+
+
+```java
+@Results(id = "" ,value = {
+        @Result(),
+        @Result(property="对应的参数名",column="查询需要的参数"
+            one=@One(select="全限定类名" , fetchById= FetchType.EAGER))
+        })
+//FetchType的几个常量
+//1:EAGER——立即加载
+//2:
+```
+
+
+
+# 十，缓存
+
+## 一级缓存
+
+1. 它指的是Mybatis中**SqlSession对象的缓存**
+2. 当我们执行查询之后，查询的结果会同时**存入到SqlSession为我们提供一块区域中**
+3. **该区域的结构是一个Map**。当我们再次查询同样的数据，mybatis会先去sqlsession中
+4. 查询是否有，有的话直接拿出来用
+5. **当SqlSession对象消失时，mybatis的一级缓存也就消失了**
+
+
+
+## 二级缓存
+
+1. 它指的是Mybatis中SqlSessionFactory对象的缓存
+2. 由同一个SqlSessionFactory对象创建的SqlSession共享其缓存
+
+### 二级缓存基于xml的使用
+
+第一步：让Mybatis框架支持二级缓存（在SqlMapConfig.xml中配置）
+
+```xml
+<settings>
+    <setting name="cacheEnabled" value="true"/>
+</settings>    
+```
+
+第二步：让当前的映射文件支持二级缓存（在IUserDao.xml中配置）
+
+```xml
+<mapper namespace="com.tutu.dao.UserDao">
+    <cache/>
+</mapper> 
+```
+
+第三步：让当前的操作支持二级缓存（在select标签中配置）
+
+```xml
+<select useCache="true"></select>
+```
+
+### 二级缓存基于注解的使用
+
+```xml
+//在sqlMapConfig.xml文件中配置settings标签
+<settings>
+    <setting name="cacheEnabled" value="true"/>
+</settings>
+```
+
+
+
+在dao类上配置
+
+```java
+@CacheNamespace(blocking = true) //这样就是开启了二级缓存
+```
+
+
+
+# 十一，OGNL表达式
+
+Object Graphic Navigation Language：对象图导航 语言
+
+它是通过对象的取值方法来获取数据。
+
+在写法上把get给省略了。
+
+> 比如：我们获取用户的名称
+>
+> 类中的写法：user.getUsername(); 
+>
+> OGNL表达式写法：user.username
+
+
+
+**注意**：mybatis中为什么能直接写username,而不用user.呢？
+
+​		因为在**parameterType**中已经提供了属性所属的类，所以此时不需要写对象名
+
+
+
+# 额外
+
+**log4j.properties文件**
+
+```
+log4j.rootLogger=debug, stdout, R
+
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+
+# Pattern to output the caller's file name and line number.
+log4j.appender.stdout.layout.ConversionPattern=%5p [%t] (%F:%L) - %m%n
+
+log4j.appender.R=org.apache.log4j.RollingFileAppender
+log4j.appender.R.File=example.log
+
+log4j.appender.R.MaxFileSize=100KB
+# Keep one backup file
+log4j.appender.R.MaxBackupIndex=5
+
+log4j.appender.R.layout=org.apache.log4j.PatternLayout
+log4j.appender.R.layout.ConversionPattern=%p %t %c - %m%n
+```
 
