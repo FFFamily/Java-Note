@@ -205,6 +205,8 @@ Exact Memory Management：准确式内存管理
 
 ### Graal VM
 
+
+
 # 类加载子系统
 
 负责加载Class文件
@@ -215,19 +217,23 @@ Exact Memory Management：准确式内存管理
 
 ![img](https://img-blog.csdnimg.cn/20200713183403217.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NTc1OTc5MQ==,size_16,color_FFFFFF,t_70)
 
-字节码文件通过ClasserLoader加载，产生一个Class文件，然后再通过链接（验证，解析），最后就是初始化，调用类
 
 
+字节码文件通过ClasserLoader加载，产生一个Class文件，然后再通过链接（验证，解析），最后就是初始化，调用类`
 
-![img](https://img-blog.csdnimg.cn/20200713183333649.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NTc1OTc5MQ==,size_16,color_FFFFFF,t_70)
+![20200713183333649](..\img\jvmimg\20200713183333649.png)
+
+
 
 ### 加载阶段
 
-通过一个类的全限定名获取定义此类的二进制字节流
+1，通过一个类的全限定名获取定义此类的二进制字节流
 
-将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构
+2，将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构
 
-在内存中生成一个代表这个类的java.lang.Class对象，作为方法区这个类的各种数据的访问入口
+3，**在内存中生成一个代表这个类的java.lang.Class对象**，作为方法区这个类的各种数据的访问入口
+
+（class实例实在加载阶段产生的）
 
 
 
@@ -239,9 +245,19 @@ Exact Memory Management：准确式内存管理
 
 
 
-准备：为类变量分配内存并且设置该类变量的默认初始值，零值
+准备：为类变量分配内存并且设置该类**变量**的默认初始值，零值
 
-> final修饰的static在编译的时候就已经分配了
+（这里强调是将变量赋值）
+
+```java
+private int n = 1;
+//在这个阶段 n = 0
+//在下一个初始化阶段才是将 n = 1；
+```
+
+
+
+> final修饰的static在编译的时候就已经分配了，因为它已经是常量了
 >
 > 
 >
@@ -259,11 +275,17 @@ Exact Memory Management：准确式内存管理
 
 1，初始化阶段就是执行类构造器方法<clinit>()方法的过程，其不同于类的构造器
 
-2，虚拟机保证一个类的<clinit>()方法在多线程下同步枷锁，也就是说，调用重复创建这个类时只是调用缓存中存在的类对象
+> **构造器是虚拟机视角下的`<init>()`**
+>
+> **构造器方法中指令按语句在源文件中出现的顺序执行**
+
+
 
 ```java
 public class ClassInitTest {
+    //任何一个类声明以后，内部至少存在一个类的构造器
     private static int num = 1;
+    
     static {
         num = 2;
         number = 20;
@@ -280,6 +302,85 @@ public class ClassInitTest {
     }
 }
 ```
+
+
+
+> iconst_0  就是加载的变量
+
+![1](..\img\jvmimg\1.jpg)
+
+
+
+值得注意的是：
+
+> 这个方法不需要定义，是编译器自动收集类中的所有类变量的赋值动作和静态代码快中的语句合并
+>
+> 当不存在赋值动作或者静态代码时，就不会有<clinit>()方法产生
+
+
+
+2，该类有父类，在执行子类<clinit>()方法前父类已经执行完成
+
+```java
+public class ClinitTest1 {
+    static class Father{
+        public static int A = 1;
+        static{
+            A = 2;
+        }
+    }
+
+    static class Son extends Father{
+        public static int B = A;
+    }
+
+    public static void main(String[] args) {
+        //加载Father类，其次加载Son类。
+        System.out.println(Son.B);//2
+    }
+}
+```
+
+
+
+3，虚拟机保证一个类的<clinit>()方法在多线程下同步枷锁，也就是说，调用重复创建这个类时只是调用缓存中存在的类对象
+
+
+
+这里会导致程序卡死：
+
+有一个线程抢到同步锁，开始加载类，但是static代码块中是个死循环，另一个线程一直等待锁的释放
+
+```java
+public class DeadThreadTest {
+    public static void main(String[] args) {
+        Runnable r = () -> {
+            System.out.println(Thread.currentThread().getName() + "开始");
+            DeadThread dead = new DeadThread();
+            System.out.println(Thread.currentThread().getName() + "结束");
+        };
+
+        Thread t1 = new Thread(r, "线程1");
+        Thread t2 = new Thread(r, "线程2");
+
+        t1.start();
+        t2.start();
+    }
+}
+
+class DeadThread {
+    static {
+        if (true) {
+            System.out.println(Thread.currentThread().getName() + "初始化当前类");
+            while (true) {
+
+            }
+        }
+    }
+}
+```
+
+
 
 
 

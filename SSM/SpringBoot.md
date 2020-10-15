@@ -30,7 +30,7 @@ J2EE的一站式解决方案
       <artifactId>spring-boot-starter-parent</artifactId>
       <version>1.5.9.RELEASE</version>
 </parent>
-
+ 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -537,15 +537,16 @@ like
 
 #### 排序查询	
 
-	语法：
-	select
-		要查询的东西
-	from
-		表
-	where 
-		条件
-	
-	order by 排序的字段|表达式|函数|别名 【asc|desc】
+```mysql
+语法：
+select
+	要查询的东西
+from
+	表
+where 
+	条件
+order by 排序的字段|表达式|函数|别名 【asc|desc】
+```
 
 #### 常见函数
 
