@@ -6,7 +6,7 @@
 
 ## 一，概念
 
-### 1，**三层架构** 
+### 三层架构 
 
 1. 开发服务器端程序，一般都基于两种形式，一种C/S架构程序，一种B/S架构程序 
 
@@ -19,7 +19,9 @@
 
    
 
-### **2，MVC模型** ：Model View Controller 模型视图控制器
+### MVC模型 
+
+（Model View Controller 模型视图控制器）
 
 1. Model：数据模型，JavaBean的类，用来进行数据封装。
 
@@ -29,7 +31,7 @@
 
 
 
-### 3，SpringMvc
+### SpringMvc
 
 1，SpringMVC 是一种基于 Java 的实现 MVC 设计模型的请求驱动类型的轻量级 Web 框架
 
@@ -39,7 +41,11 @@
 
 4，支持 RESTful 编程风格的请求
 
-### 4，角色划分
+
+
+### 角色划分
+
+**1，前端控制器（`DispatcherServlet`）**  
 
 ```
 是整个流程控制的中心，由它调用其它组件处理用户的请求
@@ -79,7 +85,7 @@
 
 
 
-### 5，SpringMvc 和 Struts2 的对比
+### SpringMvc 和 Struts2 对比
 
 共同点
 
@@ -89,7 +95,9 @@
 
 ​	处理请求的机制都是一个核心控制器
 
-区别：
+
+
+区别
 
 ​	**Spring MVC 的入口是 Servlet, 而 Struts2 是 Filter**   
 
@@ -115,9 +123,15 @@
 
 
 
-### 不用Maven创建
-
 1，创建SpringMvc项目，依赖会自动下载，并且会创建默认的目录
+
+![img](./img/1.png)
+
+
+
+
+
+
 
 ```xml
 <dependency>
@@ -152,6 +166,8 @@
 
 
 2，配置web.xml文件（`DispatcherServlet`）
+
+
 
 **1.配置`DispatcherServlet`接收用户的请求，并调用其他的对象，执行某个功能**
 
@@ -208,7 +224,8 @@
 	<!-- 配置spring创建容器时要扫描的包 -->   
     <context:component-scan base-package=""></context:component-scan>      
     
-	<!-- 配置视图解析器 -->  
+	<!-- 配置视图解析器 --> 
+	<!-- 配置之后就可以在控制器中直接返回jsp或者html文件的名称来访问那个页面文件 --> 
     <bean 
     id="viewResolver" 
     class="org.springframework.web.servlet.view.InternalResourceViewResolver">
@@ -238,11 +255,9 @@ public class HelloController {
 }
 ```
 
+--
 
-
-
-
-![img](E:\有道云笔记\新建文件夹\qqA18D73086F0D435363C26D86B8CAD5E6\fbd9a02dec984fbfa2d8fc5c13a2f938\springmvc执行流程原理.jpg)
+![img](./img/2.jpg)
 
 
 
@@ -250,7 +265,7 @@ public class HelloController {
 
 ## 三，常用注解
 
-### **@RequestMapping** 
+### RequestMapping
 
 1. RequestMapping注解的作用是建立请求URL和处理方法之间的对应关系 
 
@@ -281,7 +296,7 @@ public class HelloController {
 
 
 
-### @RequestParam
+### RequestParam
 
 **作用**：把请求中的指定名称的参数传递给控制器中的形参赋值 
 
@@ -302,7 +317,7 @@ public class HelloController {
 
 
 
-### **@RequestBody**
+### RequestBody
 
 **作用**：用于获取请求体的内容（注意：get方法不可以）
 
@@ -317,7 +332,7 @@ public String sayHello(@RequestBody String body) {}
 
 
 
-### @PathVariable
+### PathVariable
 
 **作用**：拥有绑定url中的占位符的
 
@@ -345,7 +360,7 @@ public String sayHello(@PathVariable(value="id") String id) { }
 
 
 
-### @ResponseBody
+### ResponseBody
 
 @responseBody注解的作用是将controller的方法返回的对象通过适当的转换器转换为指定的格式之后，写入到response对象的body区
 
@@ -357,13 +372,13 @@ public String sayHello(@PathVariable(value="id") String id) { }
 
 
 
-### @RestController
+### RestController
 
  简单来说就是结合了 @Controller注解和@ResponseBody注解
 
 
 
-### @RequestHeader
+### RequestHeader
 
 **作用**：获取指定请求头的值 
 
@@ -374,7 +389,7 @@ public String sayHello(@RequestHeader(value="Accept") String header) {  }
 
 
 
-### @CookieValue
+### CookieValue
 
 **作用**：用于获取指定cookie的名称的值
 
@@ -385,7 +400,7 @@ public String sayHello(@CookieValue(value="") String cookieValue) {}
 
 
 
-### @ModelAttribute  
+### ModelAttribute  
 
 **作用** 
 
@@ -423,7 +438,7 @@ public String updateUser(@ModelAttribute(value="abc") User user) {   }
 
 
 
-### @SessionAttributes
+### SessionAttributes
 
 **作用**：控制器方法间的参数共享
 

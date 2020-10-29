@@ -1157,3 +1157,140 @@ innodb_row_lock_time_max	 :  从系统启动到现在等待最久的一次时间
 *innodb_row_lock_waits		 :  从系统启动到现在总共等待的次数
 ```
 
+
+
+## 主从复制
+
+### 1，原则
+
+（1）每个slave只有一个master
+
+（2）每个slave只能有唯一的服务ID
+
+（3）每个master有多个slave
+
+
+
+## 2，配置
+
+（1）mysql版本要一致
+
+----主数据库（my.ini）----
+
+（2）配置主服务器ID
+
+```
+server-id = 1;
+```
+
+（3）启动二进制日志
+
+```
+log-bin=本地路径/mysqlbin
+```
+
+（4）启动报错日志
+
+```
+log-err=本地路径/mysqlerr
+```
+
+（5）配置根目录
+
+```
+basedir="自己本地路径"
+```
+
+（6）配置临时目录
+
+```
+tmpdir="路径"
+```
+
+（7）配置主机支持读写
+
+```
+read-only = 0
+```
+
+（8）设置不要复制的数据库
+
+```
+binlog-igonre-db = mysql
+```
+
+（9）设置需要复制的数据库
+
+```
+binlog-do-db = mysql
+```
+
+
+
+------从数据库（my.cnf）----
+
+（10）配置主服务器ID
+
+```
+server-id = 2;
+```
+
+（11）二进制日志
+
+```
+log-bin=本地路径/mysqlbin
+```
+
+
+
+> 1，修改后需要将数据库重启	
+>
+> 2，关闭防火墙
+
+
+
+（12)主服务器授权
+
+```mysql
+GRANT REPLICATION SLAVE ON *.* TO 'tutu' @ '从数据库IP' IDENTIFIED BY '密码'
+# 刷新
+flush privileges
+# 查看状态，同时记录下File和Position的值
+show master status
+```
+
+
+
+（13）从服务器授权
+
+```mysql
+CHANGE MASTER TO MASTER_HOST = '主机IP',
+MASTER_USER ='用户名',
+MASTER_PASSWORD='密码',
+MASTER_LOG_FILE='FILE的名字',
+MASTER_LOG_POS=Position数字
+
+# 启动复制功能
+start slave
+```
+
+
+
+（14）查看状态
+
+```mysql
+show slave status /G
+
+# 这两个参数要是Yes
+# Slave_IO_Running: Yes
+# Slave_SQL_Running: Yes
+```
+
+
+
+> 当开启主从复制后，主服务器进行CRUD后，Position的值会改变，所以就需要关闭主从复制，重新配置
+
+```
+stop slave
+```
+

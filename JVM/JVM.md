@@ -1,4 +1,8 @@
-# JVM
+# JVM--内存和垃圾回收
+
+> 笔记来源于《尚硅谷的JVM视频》
+>
+> 《深入理解JAVA虚拟机》
 
 ## 字节码
 
@@ -390,15 +394,31 @@ class DeadThread {
 
 2，Java虚拟机规范将所有派生于抽象类ClassLoader的类加载器都划分为自定义类加载器
 
-> 也就是说，所有直接或者间接继承ClassLoader类
+> 也就是说，所有直接或者间接继承ClassLoader的加载器都划分为自定义加载器，即**ExtClassLoader 和 AppClassLoader 都属于自定义加载器**
+>
+> ClassLoader类，它是一个抽象类，其后所有的类加载器都继承自ClassLoader（不包括启动类加载器）
+>
+> 获取 ClassLoader 途径
+>
+> ```java
+> clazz.getClassloader();//获取当前类的
+> 
+> Thread.currentThread().getContextClassLoader();//获取当前线程上下文的
+> 
+> ClassLoader.getSystemClassLoader();//获取系统的
+> 
+> DriverManager.getCallerClassLoader();//获取调用者的
+> ```
+>
+> 
+
+
+
+
 
 3，程序中常用的有3个：引导类加载器，扩展类加载器，系统类加载器，额外的还有用户自定义加载器，是包含关系
 
 即
-
-> 用户包含系统，包含扩展，包含引导
-
-
 
 ```java
 ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
@@ -406,7 +426,7 @@ ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
 // 获取其上层的：扩展类加载器
 ClassLoader extClassLoader = systemClassLoader.getParent();
 
-// 试图获取 根加载器
+// 试图获取 根加载器（引导类加载器）
 ClassLoader bootstrapClassLoader = extClassLoader.getParent();
 
 // 获取自定义加载器
@@ -419,7 +439,7 @@ ClassLoader classLoader1 = String.class.getClassLoader();
 
 得到的结果，从结果可以看出 根加载器无法直接通过代码获取，同时目前用户代码所使用的加载器为系统类加载器。
 
-同时我们通过获取String类型的加载器，发现是null，那么说明String类型是通过根加载器进行加载的，也就是说**Java的核心类库都是使用根加载器进行加载的**
+同时我们通过获取String类型的加载器，发现是null，那么说明String类型是通过根加载器进行加载的，也就是说**Java的核心类库都是使用引导类加载器进行加载的**
 
 ```
 sun.misc.Launcher$AppClassLoader@18b4aac2
@@ -429,3 +449,175 @@ sun.misc.Launcher$AppClassLoader@18b4aac2
 null 
 ```
 
+
+
+### 启动加载器
+
+> 引导类加载器，Bootstrap ClassLoader					
+
+1，使用C/C++语言实现的，嵌套在JVM内部
+
+2，它用来加载Java的核心库，用于提供JVM自身需要的类
+
+3，没有父加载器
+
+4，加载扩展类和应用程序类加载器，并作为他们的父类加载器
+
+5，出于安全考虑，Bootstrap启动类加载器只加载包名为java、javax、sun等开头的类
+
+```java
+URL[] urLs = sun.misc.Launcher.getBootstrapClassPath().getURLs();
+for (URL element : urLs) {
+	System.out.println(element.toExternalForm());
+}
+
+file:/C:/Program%20Files/Java/jdk1.8.0_144/jre/lib/resources.jar
+file:/C:/Program%20Files/Java/jdk1.8.0_144/jre/lib/rt.jar
+file:/C:/Program%20Files/Java/jdk1.8.0_144/jre/lib/sunrsasign.jar
+file:/C:/Program%20Files/Java/jdk1.8.0_144/jre/lib/jsse.jar
+file:/C:/Program%20Files/Java/jdk1.8.0_144/jre/lib/jce.jar
+file:/C:/Program%20Files/Java/jdk1.8.0_144/jre/lib/charsets.jar
+file:/C:/Program%20Files/Java/jdk1.8.0_144/jre/lib/jfr.jar
+file:/C:/Program%20Files/Java/jdk1.8.0_144/jre/classes
+```
+
+
+
+### 扩展类加载器
+
+> 扩展类加载器，Extension ClassLoader
+
+1，Java语言编写，是Launcher的内部类
+
+2，派生于ClassLoader类
+
+> 从java.ext.dirs系统属性所指定的目录中加载类库，或从JDK的安装目录的jre/lib/ext子目录（扩展目录）下加载类库。如果用户创建的JAR放在此目录下，也会自动由扩展类加载器加载
+
+```java
+String extDirs = System.getProperty("java.ext.dirs");
+for (String path : extDirs.split(";")) {
+	System.out.println(path);
+}
+
+C:\Program Files\Java\jdk1.8.0_144\jre\lib\ext
+C:\WINDOWS\Sun\Java\lib\ext
+```
+
+
+
+
+
+### 系统类加载器
+
+> 应用程序类加载器，系统类加载器，AppClassLoader
+>
+> 虚拟机自带
+>
+> 通过classLoader.getSystemclassLoader()方法可以获取到该类加载器
+
+1，Java语言编写,
+
+2，派生于ClassLoader类
+
+3，父类加载器为扩展类加载器
+
+4，它负责加载环境变量classpath（也就是自定义类的路径）或系统属性java.class.path指定路径下的类库
+
+5，一般来说，Java应用的类都是由它来完成加载
+
+
+
+### 用户自定义类加载器
+
+1，隔离加载类
+
+2，修改类加载的方式
+
+3，扩展加载源
+
+4，防止源码泄漏
+
+
+
+如何自定义类加载器？
+
+1，继承抽象类java.lang.ClassLoader类
+
+2，在JDK1.2之前，在自定义类加载器时，总会去继承ClassLoader类并重写loadClass()方法，从而实现自定义的类加载类，但是在JDK1.2之后已不再建议用户去覆盖loadClass()方法，而是建议把自定义的类加载逻辑写在findclass()方法中
+
+3，在编写自定义类加载器时，如果没有太过于复杂的需求，可以直接继承URIClassLoader类，这样就可以避免自己去编写findclass()方法及其获取字节码流的方式，使自定义类加载器编写更加简洁
+
+```java
+public class CustomClassLoader extends ClassLoader {
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+
+        try {
+            byte[] result = getClassFromCustomPath(name);
+            if (result == null) {
+                throw new FileNotFoundException();
+            } else {
+                return defineClass(name, result, 0, result.length);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        throw new ClassNotFoundException(name);
+    }
+
+    private byte[] getClassFromCustomPath(String name) {
+        //从自定义路径中加载指定类:细节略
+        //如果指定路径的字节码文件进行了加密，则需要在此方法中进行解密操作。
+        return null;
+    }
+
+    public static void main(String[] args) {
+        CustomClassLoader customClassLoader = new CustomClassLoader();
+        try {
+            Class<?> clazz = Class.forName("One", true, customClassLoader);
+            Object obj = clazz.newInstance();
+            System.out.println(obj.getClass().getClassLoader());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+
+
+### 双亲委派机制
+
+原理
+
+**Java虚拟机对class文件采用的是按需加载的方式**，也就是说当需要使用该类时才会将它的class文件加载到内存生成class对象。
+
+而且**加载某个类的class文件时，Java虚拟机采用的是双亲委派模式，即把请求交由父类处理，它是一种任务委派模式**
+
+![1](..\JVM\img\1.png)
+
+1. 如果一个类加载器收到了类加载请求，它并不会自己先去加载，而是把这个请求委托给父类的加载器去执行；
+2. 如果父类加载器还存在其父类加载器，则进一步向上委托，依次递归，请求最终将到达顶层的启动类加载器；
+3. 如果父类加载器可以完成类加载任务，就成功返回，倘若父类加载器无法完成此加载任务，子加载器才会尝试自己去加载，这就是双亲委派模式。
+4. 父类加载器一层一层往下分配任务，如果子类加载器能加载，则加载此类，如果将加载任务分配至系统类加载器也无法加载此类，则抛出异常
+
+> 当自己去创建一个javaapi中的类时，jvm不回去加载自己的类，而是去加载核心库中的java文件
+
+
+
+优势
+
+1，避免重复加载类
+
+2，保护程序安全，防止核心API被篡改
+
+
+
+### 沙箱安全机制
+
+自定义String类时：在加载自定义String类的时候会率先使用引导类加载器加载，而引导类加载器在加载的过程中会先加载jdk自带的文件（rt.jar包中java.lang.String.class），报错信息说没有main方法，就是因为加载的是rt.jar包中的String类。
+
+
+
+这样可以保证对java核心源代码的保护，这就是沙箱安全机制
