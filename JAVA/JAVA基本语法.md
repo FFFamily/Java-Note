@@ -1,3 +1,5 @@
+
+
 # JAVA基本语法
 
 ## 两大基本数据类型
@@ -806,4 +808,4 @@ String s = new String(bytes, "utf-8");
 
 1，**声明时没有写访问修饰符默认是default，default不能修饰变量**
 
-2，default才能做到完全在同一个包中，protected修饰的类的子类可能在其他包下
+2，default才能做到完全在同一个包中，protected修饰的类的子类可能在其他包下mn

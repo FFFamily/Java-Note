@@ -16,7 +16,7 @@
 
 > 数据库数据具有永久存储，有组织和可共享的基本特点
 
-​	5,、DBS：数据库系统
+​	5、DBS：数据库系统
 
 > 一般由数据库，数据库管理系统，应用程序，数据库管理人员组成
 
@@ -87,6 +87,8 @@
 
 
 
+
+
 **外模式：用户所看到的数据视图（用户模式或者子模式）**
 
 1，外模式的内容来自模式
@@ -96,6 +98,8 @@
 3，用户只能看到想看的数据，外模式会屏蔽不需要的数据，确保误操作引起的数据损失，保证数据安全
 
 4，外模式对应到关系数据库中的“视图”
+
+
 
 
 
@@ -110,6 +114,8 @@
 4，定义数据库模式既要定义数据的逻辑结构，也要定义之间的联系，数据有关的安全性，完整性
 
 5，数据库管理系统提供了模式定义语言来定义数据库中的模式
+
+
 
 > 个人理解就是数据库中的库和表
 
@@ -452,7 +458,7 @@ C/S与D/S的比较
 ### DQL
 
 ```mysql
-# 语法	
+	# 语法	
 	select
 		字段列表
 	from
@@ -545,7 +551,10 @@ from
 	表
 where 
 	条件
-order by 排序的字段|表达式|函数|别名 【asc|desc】
+order by 
+	排序的字段|表达式|函数|别名 
+asc|desc
+	升序|降序
 ```
 
 #### 常见函数
@@ -719,22 +728,28 @@ sql92
 
 特点：
 
-	1、子查询都放在小括号内
-	2、子查询可以放在from后面、select后面、where后面、having后面，但一般放在条件的右侧
-	3、子查询优先于主查询执行，主查询使用了子查询的执行结果
-	4、子查询根据查询结果的行数不同分为以下两类：
-	① 单行子查询
-		结果集只有一行
-		一般搭配单行操作符使用：> < = <> >= <= 
-		非法使用子查询的情况：
-		a、子查询的结果为一组值
-		b、子查询的结果为空
-	
-	② 多行子查询
-		结果集有多行
-		一般搭配多行操作符使用：any、all、in、not in
-		in： 属于子查询结果中的任意一个就行
-		any和all往往可以用其他查询代替
+1、子查询都放在小括号内
+2、子查询可以放在from后面、select后面、where后面、having后面，但一般放在条件的右侧
+3、子查询优先于主查询执行，主查询使用了子查询的执行结果
+4、子查询根据查询结果的行数不同分为以下两类：
+
+
+
+单行子查询
+
+结果集只有一行
+一般搭配单行操作符使用：> < = <> >= <= 
+非法使用子查询的情况：
+	a、子查询的结果为一组值
+	b、子查询的结果为空
+
+
+
+多行子查询
+结果集有多行
+一般搭配多行操作符使用：any、all、in、not in
+	in： 属于子查询结果中的任意一个就行
+	any和all往往可以用其他查询代替
 
 
 
@@ -800,6 +815,8 @@ insert into 表名(字段名，...) values (值1，...);
 	3、不可以为空的字段，必须插入值
 	4、字段个数和值的个数必须一致
 	5、字段可以省略，但默认所有字段，并且顺序和表中的存储顺序一致
+
+
 
 #### 修改
 
@@ -907,8 +924,8 @@ USE 数据库名
 CREATE TABLE IF NOT EXISTS info(
 	stuId INT,
 	stuName VARCHAR(20),
-	gender CHAR,
-	bornDate DATETIME
+	gender VARCHAR,
+	bornDate Date
 );	
 ```
 
@@ -1072,7 +1089,7 @@ FOREIGN KEY: 外键约束
         ALTER TABLE stu DROP PRIMARY KEY;
 # 创建完表后，添加主键
         ALTER TABLE stu MODIFY id INT PRIMARY KEY; 
-        ALTER TABLE category ADD constraint pk_category_id primary key (id);
+            ALTER TABLE category ADD constraint pk_category_id primary key (id);
 # alter table category 表示修改表category
 # add constraint 增加约束
 # pk_category_id 约束名称

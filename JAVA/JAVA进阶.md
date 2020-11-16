@@ -1,4 +1,4 @@
-# JAVA进阶
+JAVA进阶
 
 > 笔记来源于黑马视频，播客，书籍，以及个人理解
 
@@ -479,6 +479,8 @@ file.getName().endsWith(".java")
 
 ### 八，序列化和反序列化
 
+> 待补充
+
 代码操作
 
 ```java
@@ -899,6 +901,10 @@ queryForObject()：查询结果，将结果封装为对象
 
 **对于任何一个对象，我们都能够对它的方法和属性进行调用**。我们把这种**动态获取对象信息和调用对象方法**的功能称之为**反射机制**。
 
+反射就像一个掌控全局的角色，不论程序在那里，谁执行的，它都知道
+
+
+
 > 我们使用的一些主流框架中反射技术应用是非常广泛的.
 >
 > 所谓反射其实是获取类的字节码文件，也就是.class文件，那么我们就可以通过Class这个对象进行获取
@@ -906,6 +912,12 @@ queryForObject()：查询结果，将结果封装为对象
 
 
 ### 二，实现反射的方式
+
+> java.lang.reflect 包实现了反射机制
+
+
+
+
 
 第一种：通过Object类的getClass方法 
 
@@ -928,18 +940,146 @@ cla.newInstance()//初始化对象，接着就是使用对象了
 
 
 
+
+
+
+
 ### 三，相关的逻辑方法
 
+#### 操作类
+
+> 详细查看API
+
+#### 操作方法
+
+> 详细查看API
+
+
+
+### 四，使用
+
 ```java
-getMethod(parameterTypes)用来获取某个公有的方法的对象
-getMethods()获得该类所有公有的方法
-getDeclaredMethod(parameterTypes)获得该类某个方法
-getDeclaredMethods()获得该类所有方法
+package tutu.demo;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+public class Testreflect {
+    public static void main(String[] args) {
+        Class Student = null;
+        try {
+            //初始化
+            Student = Class.forName("tutu.demo.Student");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        System.out.println("获取对象的所有公有属性");
+        //获取对象的所有公有属性
+        Field[] fields = Student.getFields();
+        for (Field f: fields) {
+            System.out.println(f);
+            //也就是把和这个类相关的所有的公有属性获取了
+            //public java.lang.String tutu.demo.Student.className
+            //public java.lang.String tutu.demo.Person.name
+            //public int tutu.demo.Person.age
+        }
+
+        System.out.println("获取对象的所有属性，不包含继承的");
+        //Declared Fields 声明字段
+        Field[] declaredFields = Student.getDeclaredFields();
+        for (Field f : declaredFields) {
+            System.out.println(f);
+        }
+
+        System.out.println("获取对象的所有公共方法");
+        Method[] methods = Student.getMethods();
+        for (Method m : methods) {
+            System.out.println(m);
+        }
+
+        System.out.println("获取对象的对象的所有方法，不包含继承的");
+        Method[] declaredMethods = Student.getDeclaredMethods();
+        for (Method dm : declaredMethods) {
+            System.out.println(dm);
+        }
+
+        System.out.println("获取对象公共构造器");
+        Constructor[] constructors = Student.getConstructors();
+        for (Constructor c : constructors) {
+            System.out.println(c);
+        }
+
+        System.out.println("获取对象所有构造器");
+        Constructor[] declaredConstructors = Student.getDeclaredConstructors();
+        for (Constructor dc : declaredConstructors) {
+            System.out.println(dc);
+        }
+
+        System.out.println("实例化对象");
+        try {
+            //第一种方式，通过newInstance()方法创建对象，然后在使用set方法赋值
+            //类似于new() , 把对象实例化，操作对象
+            //Object s = Student.newInstance();
+            Class c = Class.forName("tutu.demo.Student");
+            Student stu1 = (Student) c.newInstance();
+            stu1.setAddress("湖南");
+            System.out.println(stu1);
+
+
+            //第二种方式，获取构造器
+            //c.getConstructor(Class<E>...classes)
+            //反射需要的是Class类型去构造方法
+            Constructor<Student> constructor = c.getConstructor(String.class, int.class, String.class, String.class);
+            Student stu2 = constructor.newInstance("涂", 20, "软件2班", "湖南");
+            System.out.println(stu2);
+
+            System.out.println("获取方法并且执行");
+            Method show = c.getMethod("showInfo");
+            Object object = show.invoke(stu2);
+            System.out.println(object);
+
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+}
 ```
 
 
 
+### 五，哪里运用到了反射
+
+1，使用JDBC连接数据库时使用Class.forName()通过反射加载数据库的驱动程序；
+
+2，pring框架也用到很多反射机制，最经典的就是xml的配置模式，Spring 通过 XML 配置模式装载 Bean 的过程
+
+​	1) 将程序内所有 XML 或 Properties 配置文件加载入内存中; 
+
+​	2) Java类里面解析xml或properties里面的内容，得到对应实体类的字节码字符串以及相关的属性信息; 
+
+​	3) 使用反射机制，根据这个字符串获得某个类的Class实例; 
+
+​	4) 动态配置实例的属性。
+
+3，解析泛型
+
+
+
+
+
 ## 泛型
+
+> JDK1.5 出现了泛型的概念
 
 ### 一，概念
 
@@ -948,6 +1088,10 @@ getDeclaredMethods()获得该类所有方法
 泛型，即“参数化类型”
 
 泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制形参具体限制的类型）
+
+> 那么参数化类型怎么理解呢？
+>
+> 顾名思义，就是将类型由原来的具体的类型参数化，类似于方法中的变量参数，此时类型也定义成参数形式（可以称之为类型形参），然后在使用/调用时传入具体的类型（类型实参）。
 
 
 
@@ -976,8 +1120,6 @@ List<String> arrayList = new ArrayList<String>();
 
 ### 三，特性
 
-泛型只在编译阶段有效
-
 ```java
 List<String> stringArrayList = new ArrayList<String>();
 List<Integer> integerArrayList = new ArrayList<Integer>();
@@ -990,14 +1132,13 @@ if(classStringArrayList.equals(classIntegerArrayList)){
 }
 ```
 
-
-
 > 泛型类型在逻辑上看以看成是多个不同的类型，实际上都是相同的基本类型
 
 注意
 
 - 泛型的类型参数只能是类类型，不能是简单类型。
 - 不能对确切的泛型类型使用instanceof操作，编译时会出错
+- 泛型只在编译阶段有效
 
 
 
@@ -1076,11 +1217,19 @@ public void show(Generic<?> obj){ }
 
 ### 六，泛型上下边界
 
+上界通配符
+
+```
+<? extends ClassType> 该通配符表示ClassType的所有子类型
+```
+
+下界通配符
+
+```
+<? super ClassTyep>  该通配符表示ClassType 的所有父类型
+```
 
 
-## 集合
-
-> 集合对于面试来讲也是一个大重点，需要额外精力去整理笔记
 
 
 

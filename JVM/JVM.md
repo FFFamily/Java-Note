@@ -612,12 +612,204 @@ public class CustomClassLoader extends ClassLoader {
 
 2，保护程序安全，防止核心API被篡改
 
+代码
+
+```java
+//自己创建一个java.lang.String类
+package java.lang;
+
+public class String {
+    static{
+        System.out.println("我是自定义的String类的静态代码块");
+    }
+}
+
+//测试类去加载自己的String类，看看是什么加载器加载的
+public class StringTest {
+    public static void main(String[] args) {
+        java.lang.String str = new java.lang.String();
+        System.out.println("hello,atguigu.com");
+
+        StringTest test = new StringTest();
+        System.out.println(test.getClass().getClassLoader());
+    }
+}
+
+//程序没有输出我的内容，可见没有加载我自己的String类
+```
+
+
+
 
 
 ### 沙箱安全机制
 
-自定义String类时：在加载自定义String类的时候会率先使用引导类加载器加载，而引导类加载器在加载的过程中会先加载jdk自带的文件（rt.jar包中java.lang.String.class），报错信息说没有main方法，就是因为加载的是rt.jar包中的String类。
+自定义String类时：在加载自定义String类的时候会率先使用引导类加载器加载
 
+而引导类加载器在加载的过程中会先加载jdk自带的文件（rt.jar包中java.lang.String.class），报错信息说没有main方法，就是因为加载的是rt.jar包中的String类
 
+```java
+package java.lang;
+
+public class String {
+    static{
+        System.out.println("我是自定义的String类的静态代码块");
+    }
+    //错误: 在类 java.lang.String 中找不到 main 方法
+    public static void main(String[] args) {
+        System.out.println("hello,String");
+    }
+}
+```
 
 这样可以保证对java核心源代码的保护，这就是沙箱安全机制
+
+或者
+
+```java
+package java.lang;
+
+public class ShkStartShkStart
+ShkStart类 {
+    public static void main(String[] args) {
+        System.out.prShkStart类
+```
+
+--输出
+
+![](./img/3.png)
+
+# java内存区域
+
+## 运行时数据区域
+
+> Java虚拟机定义了若干种程序运行期间会使用到的运行时数据区
+>
+> 1. 其中有一些会随着虚拟机启动而创建，随着虚拟机退出而销毁。
+> 2. 另外一些则是与线程一一对应的，这些与线程对应的数据区域会随着线程开始和结束而创建和销毁。
+
+### 结构
+
+线程独有：独立包括程序计数器、栈、本地方法栈
+
+线程间共享：堆、堆外内存（永久代或元空间、代码缓存)
+
+> 也就是是一个jvm有5个线程，那么就会产生1一个堆区域，一个方法去共享，然而各个线程都会有自己的虚拟机栈，本地方法栈，程序计数器
+>
+> 一个运行程序所产生一个Runtime对象，对应着一个jvm进程
+
+![img](./img/2.png)
+
+
+
+## 线程
+
+- 线程是一个程序里的运行单元。JVM允许一个应用有多个线程并行的执行
+- 在Hotspot JVM里，**每个线程都与操作系统的本地线程直接映射**
+- 当一个Java线程准备好执行以后，此时一个操作系统的本地线程也同时创建。Java线程执行终止后，本地线程也会回收
+- 操作系统负责将线程安排调度到任何一个可用的CPU上。一旦本地线程初始化成功，它就会调用Java线程中的run()方法
+- 如果一个线程抛异常，并且该线程时进程中最后一个守护线程，那么进程将停止
+
+
+
+jvm主要的系统线程（了解）
+
+**虚拟机线程**：这种线程的操作是需要JVM达到安全点才会出现。这些操作必须在不同的线程中发生的原因是他们都需要JVM达到安全点，这样堆才不会变化。这种线程的执行类型括"stop-the-world"的垃圾收集，线程栈收集，线程挂起以及偏向锁撤销
+
+**周期任务线程**：这种线程是时间周期事件的体现（比如中断），他们一般用于周期性操作的调度执行
+
+**GC线程**：这种线程对在JVM里不同种类的垃圾收集行为提供了支持
+
+**编译线程**：这种线程在运行时会将字节码编译成到本地代码
+
+**信号调度线程**：这种线程接收信号并发送给JVM，在它内部通过调用适当的方法进行处理
+
+
+
+# 程序计数器
+
+## PC寄存器
+
+1，JVM中的PC寄存器是对物理PC寄存器的一种抽象模拟，不是实际存在的
+
+2，它是一块很小的内存空间，几乎可以忽略不记。也是**运行速度最快的存储区域**,
+
+3，**在JVM规范中，每个线程都有它自己的程序计数器，是线程私有的**
+
+4，**程序计数器会存储当前线程正在执行的Java方法的JVM指令地址**
+
+5，它是**唯一一个**在Java虚拟机规范中没有规定任何OutofMemoryError情况的区域（没有异常输出）
+
+
+
+作用：PC寄存器用来存储指向**下一条指令的地址**，也即将要执行的指令代码。由执行引擎读取下一条指令，并执行该指令。
+
+### 使用
+
+```java
+public static void main(String[] args) {
+        int i = 10;
+        int j = 20;
+        int k = i + j;
+        String s = "abc";
+        System.out.println(i);
+        System.out.println(k);
+    }
+```
+
+使用反编译
+
+```java
+E:\IDEAProject\DataStructures\out\production\DataStructures\tutu\demo\LinkedList>javap -v test.class
+```
+
+输出的main方法信息
+
+```java
+ public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=5, args_size=1
+         0: bipush        10
+         2: istore_1
+         3: bipush        20
+         5: istore_2
+         6: iload_1
+         7: iload_2
+         8: iadd
+         9: istore_3
+        10: ldc           #2                  // String abc
+        12: astore        4
+        14: getstatic     #3                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        17: iload_1
+        18: invokevirtual #4                  // Method java/io/PrintStream.println:(I)V
+        21: getstatic     #3                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        24: iload_3
+        25: invokevirtual #4                  // Method java/io/PrintStream.println:(I)V
+        28: return
+```
+
+分析
+
+![](./img/4.jpg)
+
+
+
+### 作用
+
+**使用PC寄存器存储字节码指令地址有什么用呢？**
+
+1，因为线程是一个个的顺序执行流，CPU需要不停的切换各个线程，切换回来以后，就得知道接着从哪开始继续执行
+
+2，JVM的字节码解释器就需要通过改变PC寄存器的值来明确下一条应该执行什么样的字节码指令
+
+
+
+**PC寄存器为什么被设定为私有的**
+
+为了能够准确地记录各个线程正在执行的当前字节码指令地址，最好的办法自然是为每一个线程都分配一个PC寄存器
+
+
+
+#  虚拟机栈
