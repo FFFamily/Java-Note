@@ -55,9 +55,36 @@ show prifiles
 
 #### Mysql的查询流程
 
-mysql 的查询流程大致是： 
+查询流程大致是： 
 
-mysql 客户端通过协议与 mysql 服务器建连接，发送查询语句，先检查查询缓存，如果命中，直接返回结果， 否则进行语句解析,也就是说，在解析查询之前，服务器会先访问查询缓存(query cache)——它存储 SELECT 语句以及相应的查询结果集。如果某个查询结果已经位于缓存中，服务器就不会再对查询进行解析、优化、以及执行。它仅仅将缓存中的结果返回给用户即可，这将大大提高系统的性能。语法解析器和预处理：首先 mysql 通过关键字将 SQL 语句进行解析，并生成一颗对应的“解析树”。mysql 解析 器将使用 mysql 语法规则验证和解析查询；预处理器则根据一些 mysql 规则进一步检查解析数是否合法。查询优化器当解析树被认为是合法的了，并且由优化器将其转化成执行计划。一条查询可以有很多种执行方式，最后都返回相同的结果。优化器的作用就是找到这其中最好的执行计划。然后，mysql 默认使用的 BTREE 索引，并且一个大致方向是:无论怎么折腾 sql，至少在目前来说，mysql 最多只用到表中的一个索引
+1. `mysql `客户端通过协议与 `mysql `服务器建连接，发送查询语句
+2. 先检查查询缓存，如果命中，直接返回结果， 否则进行语句解析,也就是说，在解析查询之前，服务器会先访问查询缓存(query cache)——它存储 SELECT 语句以及相应的查询结果集。
+3. 如果某个查询结果已经位于缓存中，服务器就不会再对查询进行解析、优化、以及执行。它仅仅将缓存中的结果返回给用户即可，这将大大提高系统的性能
+4. 接下来是语法解析器和预处理
+5. 首先 `mysql `通过关键字将 SQL 语句进行解析，并生成一颗对应的“解析树”
+6. `mysql `解析器将使用 `mysql `语法规则验证和解析查询；
+7. 预处理器则根据一些` mysql `规则进一步检查解析数是否合法。
+8. 查询优化器当解析树被认为是合法的了，并且由优化器将其转化成执行计划。一条查询可以有很多种执行方式，最后都返回相同的结果。优化器的作用就是找到这其中最好的执行计划
+9. 然后，`mysql` 默认使用的 BTREE 索引，并且一个大致方向是:无论怎么折腾` sql`，至少在目前来说，`mysql `最多只用到表中的一个索引
+
+
+
+
+
+> 额外注意：`MySql 8.0` 不再支持查询缓存
+>
+> 尽管MySQL查询缓存旨在提高性能，但它具有严重的可伸缩性问题，并且很容易成为严重的瓶颈
+>
+> 有一些限制：
+>
+> 1. 查询必须逐字节匹配（查询缓存避免解析）
+> 2. 使用非确定性功能将导致查询不被缓存（包括临时表，用户变量，RAND（），NOW（）和UDF）。
+> 3. 查询缓存被设计为不提供过时的结果。**对基础表的任何修改都会导致这些表的所有缓存无效。**
+> 4. 对于是否可以将缓存用于`InnoDB`，存在一些限制（为了尊重MVCC；当您打开事务时，“缓存”可能无法在您期望的视图中表示数据。）
+
+
+
+
 
 #### SQL的执行顺序
 
@@ -81,15 +108,66 @@ show variables like '%storage_engine%'
 
 
 
-## 二，索引优化分析
+## 二，优化工具
+
+1，`show processlist`：查看所有连接的SESSION状态
+
+```
++----+------+-----------------+------------+---------+------+-------+------------------+
+| Id | User | Host            | db         | Command | Time | State | Info             |
++----+------+-----------------+------------+---------+------+-------+------------------+
+| 23 | root | localhost:10031 | test       | Query   |    0 | NULL  | show processlist |
+| 24 | root | localhost:10045 | system_ssm | Sleep   |    4 |       | NULL             |
++----+------+-----------------+------------+---------+------+-------+------------------+
+```
+
+2，explain
+
+3，show index
+
+4，slow-log：慢查询日志
+
+
+
+## 三，索引优化分析
 
 ### 1，什么是索引
 
-MySQL 使用的是 Btree 索引
+分类：hash索引，B+索引
 
 现在我要找一个数，若在p2范围，那么就会进入中间部门，再次判断，若又在p2，则在p2中查找
 
 ![image-20200629131220760](C:\Users\涂涂\AppData\Roaming\Typora\typora-user-images\image-20200629131220760.png)
+
+创建索引
+
+```mysql
+CREATE INDEX idx_name ON table_name(column_list);
+```
+
+查看索引
+
+```mysql
+SHOW INDEX FROM inx_test;
+```
+
+删除索引
+
+```mysql
+DROP INDEX idx_id ON inx_test;
+```
+
+对比
+
+1、B+树的层级更少：相较于B树B+每个非叶子节点存储的关键字数更多，树的层级更少所以查询数据更快
+
+2、B+树查询速度更稳定：B+所有关键字数据地址都存在叶子节点上，所以每次查找的次数都相同所以查询速度要比B树更稳定;
+
+3、B+树天然具备排序功能		
+
+4，B树相对于B+树的优点是，如果经常访问的数据离根节点很近，而B树的非叶子节点本身存有关键字其数据的地址，所以这种数据检索的时候会要比B+树快。
+
+
 
 ### 2，优点
 
@@ -157,14 +235,9 @@ ALTER TABLE customer drop PRIMARYKEY;
 ```sql
 CREATE TABLE customer (
     id INT ( 10 ) UNSIGNED AUTO_INCREMENT,
-    customer_no VARCHAR ( 200 ),
-    customer_name VARCHAR ( 200 ),
-    PRIMARYKEY ( id ),
-    KEY ( customer_name ),
-    UNIQUE ( customer_name ),
-    KEY ( customer_no, customer_name ) 
+    customer_no VARCHAR ( 20 ),
+    customer_name VARCHAR ( 20 )
 );
-
 CREATE INDEX idx_no_name ON customer(customer_no,customer_name);
 ```
 
@@ -251,8 +324,6 @@ EXPLAIN SELECT * from t1,t2,t3 WHERE t1.id=t2.id AND t2.id=t3.id;
 
 2，`id` 不同，id 不同，如果是子查询，id 的序号会递增，id 值越大优先级越高，越先被执行
 
-
-
 **注意：id 号每个号码，表示一趟独立的查询。一个 sql 的查询趟数越少越好**
 
 > 例子：id为 1  2  3 ，也就是说这个sql进行了3趟独立的查询
@@ -261,11 +332,9 @@ EXPLAIN SELECT * from t1,t2,t3 WHERE t1.id=t2.id AND t2.id=t3.id;
 
 ### 2，select_type
 
-`select_type` 代表查询的类型，主要是用于区别普通查询、联合查询、子查询等的复杂查询
+`select_type` : 代表查询的类型，主要是用于区别普通查询、联合查询、子查询等的复杂查询
 
-`select_type`对应的属性可以百度
-
-
+`select_type`:  对应的属性可以百度
 
 | SIMPLE  | 单表查询                                                   |
 | ------- | ---------------------------------------------------------- |
@@ -275,14 +344,14 @@ EXPLAIN SELECT * from t1,t2,t3 WHERE t1.id=t2.id AND t2.id=t3.id;
 SELECT * from (SELECT t1.content FROM t1) a;
 ```
 
-
-
 | select_type        |                                                      |
 | ------------------ | ---------------------------------------------------- |
 | DEPENDENT SUBQUERY | 在 SELECT 或 WHERE 列表中包含了子查询,子查询基于外层 |
 
 ```
-EXPLAIN SELECT t2.id from  t2 WHERE t2.id<br> IN (SELECT t3.id FROM t3 WHERE t3.content = 'PfkHFe');
+EXPLAIN SELECT t2.id from  t2 
+WHERE t2.id<br> 
+IN (SELECT t3.id FROM t3 WHERE t3.content = 'PfkHFe');
 ```
 
 
@@ -321,10 +390,10 @@ EXPLAIN SELECT * from  t3 WHERE id=(SELECT id FROM t2 WHERE t2.id=@@sort_buffer_
 type 是查询的访问类型，结果值从最好到最坏依次是：
 
 ```
-system > const > eq_ref> ref > fulltext > ref_or_null > index_merge > unique_subquery > index_subquery > range > index > all
+system > const > eq_ref > ref > fulltext 
+> ref_or_null > index_merge > unique_subquery 
+> index_subquery > range > index > all
 ```
-
-
 
 > 一般来说，得保证查询至少达到 range 级别，最好能达到 ref
 
@@ -332,11 +401,17 @@ system > const > eq_ref> ref > fulltext > ref_or_null > index_merge > unique_sub
 
 `system`：表只有一行记录（等于系统表） ，这是 `const` 类型的特列，平时不会出现，这个也可以忽略不计
 
-`const`：表示通过索引一次就找到了,`const` 用于比较 `primary key` 或者 unique 索引。因为只匹配一行数据，所以很快 如将主键置于 where 列表中，MySQL 就能将该查询转换为一个常量
+
+
+`const`：表示通过索引一次就找到了,`const` 用于比较 `primary key` 或者 unique 索引。
+
+因为只匹配一行数据，所以很快 如将主键置于 where  列表中，MySQL 就能将该查询转换为一个常量
 
 ```sql
 EXPLAIN SELECT * FROM t1 where t1.id = 1;
 ```
+
+
 
 `eq_ref`：唯一性索引扫描，对于每个索引键，表中只有一条记录与之匹配。常见于主键或唯一索引扫描。
 
@@ -345,19 +420,37 @@ EXPLAIN	SELECT* from t1 ,t2 where t1.id = t2.id;
 -- 这里就会先全部扫描t1表，然后去找t2表，刚好t2表只有一条记录与查到的t1表中的数据对应
 ```
 
-`ref`：非唯一性索引扫描，返回匹配某个单独值的所有行.本质上也是一种索引访问，它返回所有匹配某个单独值的行，然而，它可能会找到多个符合条件的行，所以他应该属于查找和扫描的混合体。
+
+
+`ref`：非唯一性索引扫描，返回匹配某个单独值的所有行。本质上也是一种索引访问，它返回所有匹配某个单独值的行，然而，它可能会找到多个符合条件的行，所以他应该属于查找和扫描的混合体。
+
+
 
 `range`：只检索给定范围的行,使用一个索引来选择行。
 
+```mysql
+EXPLAIN SELECT * FROM table_name WHERE id IN (1,10);
+```
+
 `index`：出现index是sql使用了索引但是没用通过索引进行过滤，一般是使用了覆盖索引或者是利用索引进行了排序分组。
+
+
 
 `all`：将遍历全表以找到匹配的行。
 
+
+
 `index_merge`：在查询过程中需要多个索引组合使用，通常出现在有 or 的关键字的 sql 中。
+
+
 
 `ref_or_null`：对于某个字段既需要关联条件，也需要 null 值得情况下。查询优化器会选择用 ref_or_null 连接查询
 
+
+
 `index_subquery`：利用索引来关联子查询，不再全表扫描
+
+
 
 `unique_subquery`：该联接类型类似于 index_subquery。 子查询中的唯一索引。
 
@@ -746,13 +839,41 @@ order-by使用index的情况：
 
 ```Mysql
 SHOW VARIABLES LIKE '%slow_query_time';
+-- 上面这个没有结果，不晓得是不是写错了（可能是版本）
+	
+SHOW VARIABLES LIKE 'slow_query%';
++---------------------+-----------------------------------------------------------------+
+| Variable_name       | Value                                                            
++---------------------+-----------------------------------------------------------------+
+| slow_query_log      | OFF                                                               
+| slow_query_log_file | C:\ProgramData\MySQL\MySQLServer5.5\Data\DESKTOP-FQFPVAP-slow.log 
++---------------------+-----------------------------------------------------------------+
+
+slow_query_log_file：慢查询日志存放的位置（一般设置为MYSQL数据存放的位置）
+slow_query_log ：慢查询开启的状态
 ```
+
+--
+
+```mysql
+-- long_query_time 查询经过多少秒才记录
+SHOW VARIABLES LIKE 'long_query_time';
++-----------------+-----------+
+| Variable_name   | Value     |
++-----------------+-----------+
+| long_query_time | 10.000000 |
++-----------------+-----------+
+```
+
+
 
 开启/设置阙值时间
 
 ```mysql
 set global slow_query_time = 1;
--- 修改了后需要重新连接和新开会话
+-- 修改了后需要重新连接和新开会话（这个写法也错误了）
+
+set long_query_time = 1;
 ```
 
 日志存放地址
@@ -761,15 +882,23 @@ set global slow_query_time = 1;
 /var/lib/mysql/表名-slow.log文件
 ```
 
+
+
 查看慢查询`sql`的数量
 
-```
+```mysql
 show global status like '%Slow_queries%'
+
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| Slow_queries  | 0     |
++---------------+-------+
 ```
 
 
 
-2，`msqldumpslow` 性能分析工具
+### 2，`msqldumpslow` 性能分析工具
 
 
 
@@ -1171,7 +1300,7 @@ innodb_row_lock_time_max	 :  从系统启动到现在等待最久的一次时间
 
 
 
-## 2，配置
+### 2，配置
 
 （1）mysql版本要一致
 
@@ -1293,4 +1422,30 @@ show slave status /G
 ```
 stop slave
 ```
+
+
+
+## 大表优化
+
+> 来自   [MySQL大表优化方案_码农 - SegmentFault 思否](https://segmentfault.com/a/1190000006158186)
+
+1，字段优化
+
+2，索引优化
+
+3，SQL语句优化
+
+4，选择合适的引擎
+
+5，系统调优
+
+6，硬件升级
+
+7，合理运用缓存
+
+8，表分区
+
+9，垂直拆分
+
+10，水平拆分
 
