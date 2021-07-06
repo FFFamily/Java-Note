@@ -546,216 +546,6 @@ var vm= new Vue({
 
 
 
-# 案例选项卡
-
-## HTML 结构
-
-```html
-`
-    <div id="app">
-        <div class="tab">
-            <!--  tab栏  -->
-            <ul>
-                <li class="active">apple</li>
-                <li class="">orange</li>
-                <li class="">lemon</li>
-            </ul>
-              <!--  对应显示的图片 -->
-            <div class="current"><img src="img/apple.png"></div>
-            <div class=""><img src="img/orange.png"></div>
-            <div class=""><img src="img/lemon.png"></div>
-        </div>
-    </div>
-
-
-`
-```
-
-## 提供的数据
-
-```js
-         list: [{
-                    id: 1,
-                    title: 'apple',
-                    path: 'img/apple.png'
-                }, {
-                    id: 2,
-                    title: 'orange',
-                    path: 'img/orange.png'
-                }, {
-                    id: 3,
-                    title: 'lemon',
-                    path: 'img/lemon.png'
-                }]
-```
-
-
-
-## 把数据渲染到页面
-
-- 把tab栏 中的数替换到页面上
-
-  - 把 data 中 title  利用 v-for 循环渲染到页面上 
-  - 把 data 中 path利用 v-for 循环渲染到页面上 
-
-  ```html
-      <div id="app">
-          <div class="tab">  
-              <ul>
-                    <!--  
-                      1、绑定key的作用 提高Vue的性能 
-                      2、 key 需要是唯一的标识 所以需要使用id， 也可以使用index ，
-  						index 也是唯一的 
-                      3、 item 是 数组中对应的每一项  
-                      4、 index 是 每一项的 索引
-                  -->
-                     <li :key='item.id' v-for='(item,index) in list'>{{item.title}}</li>
-                </ul>
-                <div  :key='item.id' v-for='(item, index) in list'>
-                      <!-- :  是 v-bind 的简写   绑定属性使用 v-bind -->
-                      <img :src="item.path">
-                </div>
-          </div>
-      </div>
-  <script>
-      new  Vue({
-          //  指定 操作元素 是 id 为app 的 
-          el: '#app',
-              data: {
-                  list: [{
-                      id: 1,
-                      title: 'apple',
-                      path: 'img/apple.png'
-                  }, {
-                      id: 2,
-                      title: 'orange',
-                      path: 'img/orange.png'
-                  }, {
-                      id: 3,
-                      title: 'lemon',
-                      path: 'img/lemon.png'
-                  }]
-              }
-      })
-  
-  </script>
-  ```
-
-  
-
-## 给每一个tab栏添加事件,并让选中的高亮
-
-- 4.1 、让默认的第一项tab栏高亮
-
-  - tab栏高亮 通过添加类名active 来实现   （CSS  active 的样式已经提前写好）
-    - 在data 中定义一个 默认的  索引 currentIndex  为  0 
-    - 给第一个li 添加 active 的类名  
-      - 通过动态绑定class 来实现   第一个li 的索引为 0     和 currentIndex   的值刚好相等
-      -  currentIndex     ===  index  如果相等  则添加类名 active  否则 添加 空类名
-
-- 4.2 、让默认的第一项tab栏对应的div 显示 
-
-  - 实现思路 和 第一个 tab 实现思路一样  只不过 这里控制第一个div 显示的类名是 current
-
-  ```html
-    <ul>
-  	   <!-- 动态绑定class   有 active   类名高亮  无 active   不高亮-->
-         <li  :class='currentIndex==index?"active":""'
-             :key='item.id' v-for='(item,index) in list'
-             >{{item.title}}</li>
-    </ul>
-  	<!-- 动态绑定class   有 current  类名显示  无 current  隐藏-->
-    <div :class='currentIndex==index?"current":""' 
-         
-         :key='item.id' v-for='(item, index) in list'>
-          <!-- :  是 v-bind 的简写   绑定属性使用 v-bind -->
-          <img :src="item.path">
-    </div>
-  
-  <script>
-      new  Vue({
-          el: '#app',
-              data: {
-                  currentIndex: 0, // 选项卡当前的索引  默认为 0  
-                  list: [{
-                      id: 1,
-                      title: 'apple',
-                      path: 'img/apple.png'
-                  }, {
-                      id: 2,
-                      title: 'orange',
-                      path: 'img/orange.png'
-                  }, {
-                      id: 3,
-                      title: 'lemon',
-                      path: 'img/lemon.png'
-                  }]
-              }
-      })
-  
-  </script>
-  ```
-
-- 4.3 、点击每一个tab栏 当前的高亮 其他的取消高亮 
-
-  - 给每一个li添加点击事件    
-
-  - 让当前的索引 index  和  当前 currentIndex 的  值 进项比较 
-
-  - 如果相等 则当前li  添加active 类名 当前的 li 高亮  当前对应索引的 div 添加 current 当前div 显示 其他隐藏
-
-    ```html
-        <div id="app">
-            <div class="tab">
-                <ul>
-                    <!--  通过v-on 添加点击事件   需要把当前li 的索引传过去 
-    				-->
-                    <li v-on:click='change(index)'		           			
-                        :class='currentIndex==index?"active":""'                   
-                        :key='item.id' 
-                        v-for='(item,index) in list'>{{item.title}}</li>
-                </ul>
-                <div :class='currentIndex==index?"current":""' 
-                     :key='item.id' v-for='(item, index) in list'>
-                    <img :src="item.path">
-                </div>
-            </div>
-        </div>
-    
-    <script>
-        new  Vue({
-            el: '#app',
-                data: {
-                    currentIndex: 0, // 选项卡当前的索引  默认为 0  
-                    list: [{
-                        id: 1,
-                        title: 'apple',
-                        path: 'img/apple.png'
-                    }, {
-                        id: 2,
-                        title: 'orange',
-                        path: 'img/orange.png'
-                    }, {
-                        id: 3,
-                        title: 'lemon',
-                        path: 'img/lemon.png'
-                    }]
-                },
-                methods: {
-                    change: function(index) {
-                        // 通过传入过来的索引来让当前的  currentIndex  和点击的index 值 相等 
-                        //  从而实现 控制类名    
-                        this.currentIndex = index;
-                    }
-                }
-        
-        })
-    
-    </script>
-    ```
-
-    
-
 # Vue常用特性
 
 ## 表单基本操作
@@ -1205,421 +995,6 @@ new Vue({
 ```html
 vm.$set(vm.inf,'age',12)
 //给对象添加一个age属性
-```
-
-#  图书列表案例
-
-- 静态列表效果
-- 基于数据实现模板效果
-- 处理每行的操作按钮
-
-##  提供的静态数据
-
-- 数据存放在vue 中 data 属性中
-
-```js
- var vm = new Vue({
-      el: '#app',
-      data: {
-        books: [{
-          id: 1,
-          name: '三国演义',
-          date: ''
-        },{
-          id: 2,
-          name: '水浒传',
-          date: ''
-        },{
-          id: 3,
-          name: '红楼梦',
-          date: ''
-        },{
-          id: 4,
-          name: '西游记',
-          date: ''
-        }]
-      }
-    });
-```
-
-## 把提供好的数据渲染到页面上
-
-- 利用 v-for循环 遍历 books 将每一项数据渲染到对应的数据中
-
-```html
-<div id="app">
-    <div class="grid">
-      <table>
-        <thead>
-          <tr>
-            <th>编号</th>
-            <th>名称</th>
-            <th>时间</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr :key='item.id' v-for='item in books'>
-            <td>{{item.id}}</td>
-            <td>{{item.name}}</td>
-            <td>{{item.date}}</td>
-            <td>
-              <a href="" @click.prevent>修改</a>
-              <span>|</span>
-              <a href="" @click.prevent>删除</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-```
-
-## 添加图书
-
-- 通过双向绑定获取到输入框中的输入内容 
-- 给按钮添加点击事件 
-- 把输入框中的数据存储到 data 中的 books  里面
-
-```html
-<div>
-  <h1>图书管理</h1>
-  <div class="book">
-       <div>
-         <label for="id">
-           编号：
-         </label>
-          <!-- 3.1、通过双向绑定获取到输入框中的输入的 id  -->
-         <input type="text" id="id" v-model='id'>
-         <label for="name">
-           名称：
-         </label>
-           <!-- 3.2、通过双向绑定获取到输入框中的输入的 name  -->
-         <input type="text" id="name" v-model='name'>
-            <!-- 3.3、给按钮添加点击事件  -->
-         <button @click='handle'>提交</button>
-       </div>
-  </div>
-</div>
-  <script type="text/javascript">
-    /*
-      图书管理-添加图书
-    */
-    var vm = new Vue({
-      el: '#app',
-      data: {
-        id: '',
-        name: '',
-        books: [{
-          id: 1,
-          name: '三国演义',
-          date: ''
-        },{
-          id: 2,
-          name: '水浒传',
-          date: ''
-        },{
-          id: 3,
-          name: '红楼梦',
-          date: ''
-        },{
-          id: 4,
-          name: '西游记',
-          date: ''
-        }]
-      },
-      methods: {
-        handle: function(){
-          // 3.4 定义一个新的对象book 存储 获取到输入框中 书 的id和名字 
-          var book = {};
-          book.id = this.id;
-          book.name = this.name;
-          book.date = '';
-         // 3.5 把book  通过数组的变异方法 push 放到    books 里面
-          this.books.push(book);
-          //3.6 清空输入框
-          this.id = '';
-          this.name = '';
-        }
-      }
-    });
-  </script>
-```
-
-## 修改图书-上 
-
-- 点击修改按钮的时候 获取到要修改的书籍名单
-  - 4.1  给修改按钮添加点击事件，  需要把当前的图书的id 传递过去 这样才知道需要修改的是哪一本书籍
-- 把需要修改的书籍名单填充到表单里面
-  - 4.2  根据传递过来的id 查出books 中 对应书籍的详细信息
-  - 4.3 把获取到的信息填充到表单
-
-```html
- <div id="app">
-    <div class="grid">
-      <div>
-        <h1>图书管理</h1>
-        <div class="book">
-          <div>
-            <label for="id">
-              编号：
-            </label>
-            <input type="text" id="id" v-model='id' :disabled="flag">
-            <label for="name">
-              名称：
-            </label>
-            <input type="text" id="name" v-model='name'>
-            <button @click='handle'>提交</button>
-          </div>
-        </div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>编号</th>
-            <th>名称</th>
-            <th>时间</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr :key='item.id' v-for='item in books'>
-            <td>{{item.id}}</td>
-            <td>{{item.name}}</td>
-            <td>{{item.date}}</td>
-            <td>
-              <!--- 
-				4.1  给修改按钮添加点击事件，  需要把当前的图书的id 传递过去 
-				这样才知道需要修改的是哪一本书籍
-  				--->  
-              <a href="" @click.prevent='toEdit(item.id)'>修改</a>
-              <span>|</span>
-              <a href="" @click.prevent>删除</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
- <script type="text/javascript">
-    /*
-      图书管理-添加图书
-    */
-    var vm = new Vue({
-      el: '#app',
-      data: {
-        flag: false,
-        id: '',
-        name: '',
-        books: [{
-          id: 1,
-          name: '三国演义',
-          date: ''
-        },{
-          id: 2,
-          name: '水浒传',
-          date: ''
-        },{
-          id: 3,
-          name: '红楼梦',
-          date: ''
-        },{
-          id: 4,
-          name: '西游记',
-          date: ''
-        }]
-      },
-      methods: {
-        handle: function(){
-          // 3.4 定义一个新的对象book 存储 获取到输入框中 书 的id和名字 
-          var book = {};
-          book.id = this.id;
-          book.name = this.name;
-          book.date = '';
-         // 3.5 把book  通过数组的变异方法 push 放到    books 里面
-          this.books.push(book);
-          //3.6 清空输入框
-          this.id = '';
-          this.name = '';
-        },
-        toEdit: function(id){
-          console.log(id)
-          //4.2  根据传递过来的id 查出books 中 对应书籍的详细信息
-          var book = this.books.filter(function(item){
-            return item.id == id;
-          });
-          console.log(book)
-          //4.3 把获取到的信息填充到表单
-          // this.id   和  this.name 通过双向绑定 绑定到了表单中  一旦数据改变视图自动更新
-          this.id = book[0].id;
-          this.name = book[0].name;
-        }
-      }
-    });
-  </script>
-```
-
-## 修改图书-下
-
-- 5.1  定义一个标识符， 主要是控制 编辑状态下当前编辑书籍的id 不能被修改 即 处于编辑状态下 当前控制书籍编号的输入框禁用  
-- 5.2  通过属性绑定给书籍编号的 绑定 disabled 的属性  flag 为 true 即为禁用
-- 5.3  flag 默认值为false   处于编辑状态 要把 flag 改为true 即当前表单为禁用 
-- 5.4  复用添加方法   用户点击提交的时候依然执行 handle 中的逻辑如果 flag为true 即 表单处于不可输入状态 此时执行的用户编辑数据数据
-
-```html
-<div id="app">
-    <div class="grid">
-      <div>
-        <h1>图书管理</h1>
-        <div class="book">
-          <div>
-            <label for="id">
-              编号：
-            </label>
-              <!-- 5.2 通过属性绑定 绑定 disabled 的属性  flag 为 true 即为禁用      -->
-            <input type="text" id="id" v-model='id' :disabled="flag">
-            <label for="name">
-              名称：
-            </label>
-            <input type="text" id="name" v-model='name'>
-            <button @click='handle'>提交</button>
-          </div>
-        </div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>编号</th>
-            <th>名称</th>
-            <th>时间</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr :key='item.id' v-for='item in books'>
-            <td>{{item.id}}</td>
-            <td>{{item.name}}</td>
-            <td>{{item.date}}</td>
-            <td>
-              <a href="" @click.prevent='toEdit(item.id)'>修改</a>
-              <span>|</span>
-              <a href="" @click.prevent>删除</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>   
-<script type="text/javascript">
-        /*图书管理-添加图书*/
-        var vm = new Vue({
-            el: '#app',
-            data: {
-                // 5.1  定义一个标识符， 主要是控制 编辑状态下当前编辑书籍的id 不能被修改 
-                // 即 处于编辑状态下 当前控制书籍编号的输入框禁用 
-                flag: false,
-                id: '',
-                name: '',
-              
-            },
-            methods: {
-                handle: function() {
-                   /*
-                     5.4  复用添加方法   用户点击提交的时候依然执行 handle 中的逻辑
-                 		 如果 flag为true 即 表单处于不可输入状态 此时执行的用户编辑数据数据	
-                   */ 
-                    if (this.flag) {
-                        // 编辑图书
-                        // 5.5  根据当前的ID去更新数组中对应的数据  
-                        this.books.some((item) => {
-                            if (item.id == this.id) {
-                                // 箭头函数中 this 指向父级作用域的this 
-                                item.name = this.name;
-                                // 完成更新操作之后，需要终止循环
-                                return true;
-                            }
-                        });
-                        // 5.6 编辑完数据后表单要处以可以输入的状态
-                        this.flag = false;
-                    //  5.7  如果 flag为false  表单处于输入状态 此时执行的用户添加数据    
-                    } else { 
-                        var book = {};
-                        book.id = this.id;
-                        book.name = this.name;
-                        book.date = '';
-                        this.books.push(book);
-                        // 清空表单
-                        this.id = '';
-                        this.name = '';
-                    }
-                    // 清空表单
-                    this.id = '';
-                    this.name = '';
-                },
-                toEdit: function(id) {
-                     /*
-                     5.3  flag 默认值为false   处于编辑状态 要把 flag 改为true 即当前表单为禁					  用 
-                     */ 
-                    this.flag = true;
-                    console.log(id)
-                    var book = this.books.filter(function(item) {
-                        return item.id == id;
-                    });
-                    console.log(book)
-                    this.id = book[0].id;
-                    this.name = book[0].name;
-                }
-            }
-        });
-    </script>
-```
-
-## 删除图书
-
-- 6.1 给删除按钮添加事件 把当前需要删除的书籍id 传递过来
-- 6.2 根据id从数组中查找元素的索引
-- 6.3 根据索引删除数组元素
-
-```html
-  <tbody>
-          <tr :key='item.id' v-for='item in books'>
-            <td>{{item.id}}</td>
-            <td>{{item.name}}</td>
-            <td>{{item.date}}</td>
-            <td>
-              <a href="" @click.prevent='toEdit(item.id)'>修改</a>
-              <span>|</span>
-               <!--  6.1 给删除按钮添加事件 把当前需要删除的书籍id 传递过来  --> 
-              <a href="" @click.prevent='deleteBook(item.id)'>删除</a>
-            </td>
-          </tr>
-</tbody>
-  <script type="text/javascript">
-    /*
-      图书管理-添加图书
-    */
-    var vm = new Vue({
-      methods: {
-        deleteBook: function(id){
-          // 删除图书
-          #// 6.2 根据id从数组中查找元素的索引
-          // var index = this.books.findIndex(function(item){
-          //   return item.id == id;
-          // });
-          #// 6.3 根据索引删除数组元素
-          // this.books.splice(index, 1);
-          // -------------------------
-         #// 方法二：通过filter方法进行删除
-		
-          # 6.4  根据filter 方法 过滤出来id 不是要删除书籍的id 
-          # 因为 filter 是替换数组不会修改原始数据 所以需要 把 不是要删除书籍的id  赋值给 books 
-          this.books = this.books.filter(function(item){
-            return item.id != id;
-          });
-        }
-      }
-    });
-  </script>
 ```
 
 
@@ -2491,4 +1866,154 @@ axios.interceptors.response.use(function(res) {
       console.log(data)
     })
 ```
+
+
+
+# 路由
+
+## 概念
+
+路由的本质就是一种对应关系，比如说我们在url地址中输入我们要访问的url地址之后，浏览器要去请求这个url地址对应的资源
+
+那么url地址和真实的资源之间就有一种对应的关系，就是路由
+
+
+
+## 分类
+
+后端路由是由服务器端进行实现，并完成资源的分发
+
+前端路由是依靠hash值(锚链接)的变化进行实现 
+
+
+
+## Vue-Route
+
+需要导入`vue-route`的`js文件`
+
+### 快速上手
+
+1，添加路由链接
+
+```html
+<div>
+    <router-link to="/user">User</router-link>
+    添加路由填充位（路由占位符）
+    <router-view></router-view>
+</div>
+```
+
+2，定义路由组件（也就是对应的url会路由到哪里去）
+
+```javascript
+var User = { template:"<div>This is User</div>" }
+```
+
+3，配置路由规则并创建路由实例
+
+```javascript
+var myRouter = new VueRouter({
+    routes:[
+        //每一个路由规则都是一个对象，对象中至少包含path和component两个属性
+        //path表示  路由匹配的hash地址，component表示路由规则对应要展示的组件对象
+        {path:"/user",component:User}
+    ]
+})
+```
+
+4，路由挂载到Vue实例中
+
+```javascript
+const vm = new Vue({
+	el: '#app',
+	router
+})
+```
+
+
+
+### 嵌套路由
+
+也就是在一个路由中再放一个路由
+
+```javascript
+routes: [
+        { 
+        path: "/login", 
+        component: Login,
+        //通过children属性为/login添加子路由规则
+        children:[
+            { path: "/login/account", component: account },
+            { path: "/login/phone", component: phone },
+                ]
+        }    
+        ]
+```
+
+
+
+### 动态路由
+
+当多个URL中仅仅是后缀不同，前缀都一样的时候，可以使用动态路由
+
+第一种
+
+```javascript
+//这样就可以针对多个/user/1 /user/2 /user/3 去路由
+
+var User = { template:"<div>用户：{{$route.params.id}}</div>"}
+routes: [
+	//通过/:参数名  的形式传递参数 
+	{ path: "/user/:id", component: User }
+]
+```
+
+第二种
+
+```javascript
+var User = { 
+    props:["username"],
+    template:"<div>{{username}}</div>"
+}
+{ path: "/user/:id", component: User,props:true} //这样User组件那里就能获得id
+{ path: "/user/:id", component: User,props:{username:"jack"} },//这样还能传递其他的参数，但是不能传递id
+{ path: "/user/:id", component: User,props: route=>{username:"jack",id:$route.params.id}},//这种就能把id也传过去
+```
+
+
+
+### 命名路由
+
+给路由取一个名字`name属性`
+
+```javascript
+<router-link :to="{ name:'user' , params: {id:123} }">User</router-link>
+
+{ path: "/user/:id", component: User, name:"user"}
+```
+
+
+
+编程式导航
+
+给按钮之类的组件加方法，进行导航
+
+`this.$router.push("/login");`
+
+```javascript
+methods: {
+	goDetial(id){
+		console.log(id)
+		this.$router.push('/userinfo'+id)
+	}
+}
+```
+
+
+
+## 路由的案例
+
+> 在笔记中存放
+
+
 

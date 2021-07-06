@@ -601,6 +601,8 @@ destroy-method: 在bean对象销毁时执行的方法
 <bean id="accountdao" class="com.dao.impl.AccountdaoImpl"></bean>
 ```
 
+
+
 第二种：使用普通工厂类中的方法创建
 
 一般这种方式是针对，很多无法修改的jar包，**其中很多构造方法都被使用**，所以需要一个**工厂类，用来创建需要类的对象**
@@ -618,6 +620,10 @@ public class Factory{
     public void getAccountdaoe(){ return new AccountDaoImpl();}
 }
 ```
+
+
+
+
 
 第三种：使用工厂中的静态方法创建对象
 
@@ -649,7 +655,7 @@ prototype():多例的
 request():作用于web应用的请求范围
 session():作用于web应用的会话范围
 global-session:作用于集群环境的会话范围（全局会话范围）
-                //当不是集群环境时，它就是session
+//当不是集群环境时，它就是session
 ```
 
 例子
@@ -664,7 +670,7 @@ global-session:作用于集群环境的会话范围（全局会话范围）
 
 **单例对象**
 
-​                出生：当**容器创建**时对象出生
+ 出生：当**容器创建**时对象出生
 
 1，创建Bean实例
 

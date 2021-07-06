@@ -9,10 +9,21 @@
 ```xml
 <!--注意导plus和mybatis就只能导入一个，避免会发生冲突-->
 <dependency>
-<groupId>com.baomidou</groupId>
-<artifactId>mybatis-plus-boot-starter</artifactId>
-<version>3.0.5</version>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-boot-starter</artifactId>
+    <version>3.3.1</version>
 </dependency>
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+</dependency>
+<!--lombok用来简化实体类-->
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <optional>true</optional>
+</dependency>
+
 ```
 
 ### 2，编写相关的代码
@@ -501,7 +512,7 @@ wrapper      
         strategy.setVersionFieldName("version");
         strategy.setRestControllerStyle(true);        
         strategy.setControllerMappingHyphenStyle(true); // localhost:8080/hello_id_2        
-        mpg.setStrategy(strategy);
+        mpg.se tStrategy(strategy);
         mpg.execute(); //执行    
     } 
 }

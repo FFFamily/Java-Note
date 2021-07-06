@@ -1,93 +1,102 @@
-# Shiro 实战教程
+> Shiro 实战教程
+>
+> 缓存功能没有实现，没有报错
 
-- 作者  小陈 
-- 微信 chenxu521600
-- B站 编程不良人  |  百知教育
-- 资料 http://www.baizhiedu.xin
+## 一，权限管理
 
-  ![image-20200520220106539](Shiro 实战教程.assets/image-20200520220106539.png)
+权限管理属于系统安全的范畴，权限管理实现`对用户访问系统的控制`，按照安全规则或者[安全策略](http://baike.baidu.com/view/160028.htm)控制用户可以访问而且只能访问自己被授权的资源。
 
-## 1.权限的管理
+权限管理包括用户`身份认证`和`授权`两部分，简称`认证授权`。
 
-### 1.1 什么是权限管理
+> 对于需要访问控制的资源用户首先经过身份认证
+>
+> 认证通过后用户具有该资源的访问权限方可访问
 
-基本上涉及到用户参与的系统都要进行权限管理，权限管理属于系统安全的范畴，权限管理实现`对用户访问系统的控制`，按照安全规则或者[安全策略](http://baike.baidu.com/view/160028.htm)控制用户可以访问而且只能访问自己被授权的资源。
+###  认证
 
-权限管理包括用户`身份认证`和`授权`两部分，简称`认证授权`。对于需要访问控制的资源用户首先经过身份认证，认证通过后用户具有该资源的访问权限方可访问。
+`身份认证`，就是判断一个用户是否为合法用户的处理过程
 
-### 1.2 什么是身份认证
-
-`身份认证`，就是判断一个用户是否为合法用户的处理过程。最常用的简单身份认证方式是系统通过核对用户输入的用户名和口令，看其是否与系统中存储的该用户的用户名和口令一致，来判断用户身份是否正确。对于采用[指纹](http://baike.baidu.com/view/5628.htm)等系统，则出示指纹；对于硬件Key等刷卡系统，则需要刷卡。
-
-### 1.3 什么是授权
+### 授权
 
 `授权，即访问控制`，控制谁能访问哪些资源。主体进行身份认证后需要分配权限方可访问系统的资源，对于某些资源没有权限是无法访问的
 
 ----
 
-## 2.什么是shiro
+## 二，shiro
 
-> **Apache Shiro™** is a powerful and easy-to-use Java security framework that performs authentication, authorization, cryptography, and session management. With Shiro’s easy-to-understand API, you can quickly and easily secure any application – from the smallest mobile applications to the largest web and enterprise applications.  
->
-> Shiro 是一个功能强大且易于使用的Java安全框架，它执行身份验证、授权、加密和会话管理。使用Shiro易于理解的API，您可以快速轻松地保护任何应用程序—从最小的移动应用程序到最大的web和企业应用程序。
+Shiro 是一个功能强大且易于使用的Java安全框架，它执行身份验证、授权、加密和会话管理。使用Shiro易于理解的API，您可以快速轻松地保护任何应用程序—从最小的移动应用程序到最大的web和企业应用程序
 
-`Shiro是apache旗下一个开源框架，它将软件系统的安全认证相关的功能抽取出来，实现用户身份认证，权限授权、加密、会话管理等功能，组成了一个通用的安全认证框架。`
+Shiro是apache旗下一个开源框架，它将软件系统的安全认证相关的功能抽取出来，实现用户身份认证，权限授权、加密、会话管理等功能，组成了一个通用的安全认证框架
+
+1，简单易用
+
+2，API容易搞懂
 
 ----
 
-## 3.shiro的核心架构
+## 三，核心架构
 
-![image-20200520220413190](Shiro 实战教程.assets/image-20200520220413190.png)
+![image-20200520220413190](./img/2.png)
 
-### 3.1 Subject
 
-`Subject即主体`，外部应用与subject进行交互，subject记录了当前操作用户，将用户的概念理解为当前操作的主体，可能是一个通过浏览器请求的用户，也可能是一个运行的程序。	Subject在shiro中是一个接口，接口中定义了很多认证授相关的方法，外部程序通过subject进行认证授，而subject是通过SecurityManager安全管理器进行认证授权
 
-### 3.2 SecurityManager
+### Subject（主体）
+
+`Subject即主体`，外部应用与subject进行交互，subject记录了当前操作用户，将用户的概念理解为当前操作的主体，可能是一个通过浏览器请求的用户，也可能是一个运行的程序。	
+
+Subject在shiro中是一个接口，接口中定义了很多认证授相关的方法，外部程序通过subject进行认证授，而subject是通过SecurityManager安全管理器进行认证授权
+
+### SecurityManager(核心)
 
 `SecurityManager即安全管理器`，对全部的subject进行安全管理，它是shiro的核心，负责对所有的subject进行安全管理。通过SecurityManager可以完成subject的认证、授权等，实质上SecurityManager是通过Authenticator进行认证，通过Authorizer进行授权，通过SessionManager进行会话管理等。
 
 `SecurityManager是一个接口，继承了Authenticator, Authorizer, SessionManager这三个接口。`
 
-### 3.3 Authenticator
+### Authenticator（认证器）
 
-`Authenticator即认证器`，对用户身份进行认证，Authenticator是一个接口，shiro提供ModularRealmAuthenticator实现类，通过ModularRealmAuthenticator基本上可以满足大多数需求，也可以自定义认证器。
+`Authenticator即认证器`，对用户身份进行认证
 
-### 3.4 Authorizer
+Authenticator是一个接口，`shiro`提供`ModularRealmAuthenticator`实现类，通过`ModularRealmAuthenticator`基本上可以满足大多数需求，也可以自定义认证器。
+
+### Authorizer(授权器)
 
 `Authorizer即授权器`，用户通过认证器认证通过，在访问功能时需要通过授权器判断用户是否有此功能的操作权限。
 
-###  3.5 Realm
+###  Realm（执行的实体）
 
-`Realm即领域`，相当于datasource数据源，securityManager进行安全认证需要通过Realm获取用户权限数据，比如：如果用户身份数据在数据库那么realm就需要从数据库获取用户身份信息。
+`Realm即领域`，相当于`datasource`数据源，`securityManager` 进行安全认证需要通过Realm获取用户权限数据，比如：如果用户身份数据在数据库那么realm就需要从数据库获取用户身份信息。
 
 - ​	注意：不要把realm理解成只是从数据源取数据，在realm中还有认证授权校验的相关的代码。
 
-### 3.6 SessionManager
+### SessionManager
 
-`sessionManager即会话管理`，shiro框架定义了一套会话管理，它不依赖web容器的session，所以shiro可以使用在非web应用上，也可以将分布式应用的会话集中在一点管理，此特性可使它实现单点登录。
+`sessionManager即会话管理`
 
-### 3.7 SessionDAO
+`shiro `框架定义 了一套会话管理，它不依赖 `web容器 ` 的 `session `，所以`shiro `可以使用在`非web应用`上，也可以将分布式应用的会话集中在一点管理，此特性可使它实现单点登录。
 
-`SessionDAO即会话dao`，是对session会话操作的一套接口，比如要将session存储到数据库，可以通过jdbc将会话存储到数据库。
+### SessionDAO
 
-### 3.8 CacheManager
+`SessionDAO即会话dao`，是对session会话操作的一套接口
+
+比如要将`session`存储到数据库，可以通过`jdbc`将会话存储到数据库。
+
+### CacheManager
 
 `CacheManager即缓存管理`，将用户权限数据存储在缓存，这样可以提高性能。
 
-### 3.9 Cryptography
+### Cryptography
 
 ​	`Cryptography即密码管理`，shiro提供了一套加密/解密的组件，方便开发。比如提供常用的散列、加/解密等功能。
 
 ----
 
-## 4. shiro中的认证
+## 四，认证
 
-### 4.1 认证
+### 1，认证概述
 
-身份认证，就是判断一个用户是否为合法用户的处理过程。最常用的简单身份认证方式是系统通过核对用户输入的用户名和口令，看其是否与系统中存储的该用户的用户名和口令一致，来判断用户身份是否正确。
+最常用的简单身份认证方式是系统通过核对用户输入的用户名和口令，看其是否与系统中存储的该用户的用户名和口令一致，来判断用户身份是否正确
 
-### 4.2 shiro中认证的关键对象
+### 2，关键对象
 
 - **Subject：主体**
 
@@ -95,19 +104,29 @@
 
 - **Principal：身份信息**
 
-是主体（subject）进行身份认证的标识，标识必须具有`唯一性`，如用户名、手机号、邮箱地址等，一个主体可以有多个身份，但是必须有一个主身份（Primary Principal）。
+是主体（subject）进行身份认证的标识，标识必须具有`唯一性`
+
+如用户名、手机号、邮箱地址等，一个主体可以有多个身份，但是必须有一个主身份（Primary Principal）,也就是作为登录系统时的身份
 
 - **credential：凭证信息**
 
 是只有主体自己知道的安全信息，如密码、证书等。
 
-### 4.3 认证流程
+### 3，认证流程
 
-![image-20200521204452288](Shiro 实战教程.assets/image-20200521204452288.png)
+1，主体（`subject`）携带自己的身份信息（凭证信息）登录，也就是`token`
 
-### 4.4 认证的开发
+2，安全管理器会去请求认证器，认证器又会去请求`Realm` 获取去数据
 
-##### 1. 创建项目并引入依赖
+3，如果信息和数据库中的一致，那么就通过
+
+4，否则就认证失败
+
+
+
+### 4，入门
+
+#### （1）导入依赖
 
 ```xml
 <dependency>
@@ -117,7 +136,13 @@
 </dependency>
 ```
 
-##### 2. 引入shiro配置文件并加入如下配置
+#### （2）shiro配置文件
+
+> .ini  结尾文件（类似于 .txt）
+>
+> .ini 复杂数据格式，一般是写配置
+>
+> 整合 spingboot 后是使用不到的，只是为了学习时的简单，这样就不用去访问数据库，直接写死在这个文件
 
 ```ini
 [users]
@@ -125,14 +150,12 @@ xiaochen=123
 zhangsan=456
 ```
 
-![image-20200521205219719](Shiro 实战教程.assets/image-20200521205219719.png)
-
-##### 3.开发认证代码
+####  （3）代码
 
 ```java
 public class TestAuthenticator {
     public static void main(String[] args) {
-        //创建securityManager
+        //创建securityMana  ger
         DefaultSecurityManager defaultSecurityManager = new DefaultSecurityManager();
         defaultSecurityManager.setRealm(new IniRealm("classpath:shiro.ini"));
         //将安装工具类中设置默认安全管理器
@@ -141,96 +164,220 @@ public class TestAuthenticator {
         Subject subject = SecurityUtils.getSubject();
         //创建token令牌
         UsernamePasswordToken token = new UsernamePasswordToken("xiaochen1", "123");
-        try {
-            subject.login(token);//用户登录
-            System.out.println("登录成功~~");
-        } catch (UnknownAccountException e) {  //UnknownAccountException:账号不存在异常
-            e.printStackTrace();
-            System.out.println("用户名错误!!");
-        }catch (IncorrectCredentialsException e){  //IncorrectCredentialsException:密码错误抛出的异常
-            e.printStackTrace();
-            System.out.println("密码错误!!!");
-        }
+        //用户登录，没有报错则认为认真成功
+        subject.login(token);
     }
 }
 ```
 
-- DisabledAccountException（帐号被禁用）
 
-- LockedAccountException（帐号被锁定）
 
-- ExcessiveAttemptsException（登录失败次数过多）
+认证失败的常见异常
 
-- ExpiredCredentialsException（凭证过期）等
+- `UnknownAccountException` 账号不存在  // 认证器返回null
+- `DisabledAccountException` 帐号被禁用
+- `LockedAccountException` 帐号被锁定
+- `ExcessiveAttemptsException` 登录失败次数过多
+- `ExpiredCredentialsException`（凭证过期）等
+- `IncorrectCredentialsException` 密码错误  //认证器认证密码时不匹配返回异常
 
 -----
 
-### 4.5 自定义Realm
 
-上边的程序使用的是Shiro自带的IniRealm，IniRealm从ini配置文件中读取用户的信息，大部分情况下需要从系统的数据库中读取用户信息，所以需要自定义realm。
 
-##### 1.shiro提供的Realm
+#### （4）解析认证源码过程(❤)
 
-![image-20200521212728541](Shiro 实战教程.assets/image-20200521212728541.png)
+1，给 `login` 打断点进入，查看执行流程
 
-##### 2.根据认证源码认证使用的是SimpleAccountRealm
+```java
+// 就直接来到了 DelegatingSubject 中
+public void login(AuthenticationToken token) throws AuthenticationException {
+    // 虽然调用的是subject的login，但是底层还是使用的securityManager
+    // this 代表当前 DelegatingSubject
+    // token 就是口令信息
+    Subject subject = this.securityManager.login(this, token);
+}
+```
 
-![image-20200521213451998](Shiro 实战教程.assets/image-20200521213451998.png)
+2，再次进入 `login` 方法
+
+```java
+// 来到了 DefaultSecurityManager 中的login方法
+public Subject login(Subject subject, AuthenticationToken token) {
+    AuthenticationInfo info;
+        try {
+            info = this.authenticate(token);
+        } catch (AuthenticationException var7) {
+            
+        }
+}
+```
+
+3，进入 authenticate 方法
+
+```java
+// 来到了认证管理器 AuthenticatingSecurityManager 中的 authenticate 方法
+private Authenticator authenticator = new ModularRealmAuthenticator();
+
+public AuthenticationInfo authenticate(AuthenticationToken token)  {
+    //再次调用这个类中的 authenticator 的 authenticate 方法
+	return this.authenticator.authenticate(token);
+}
+```
+
+4，再次进入 authenticate 方法
+
+```java
+// AbstractAuthenticator
+public final AuthenticationInfo authenticate(AuthenticationToken token)  {
+    AuthenticationInfo info;
+    try {
+    	info = this.doAuthenticate(token);
+    }
+}
+```
+
+5，再次进入 `doAuthenticate` 方法
+
+```java
+protected AuthenticationInfo doAuthenticate(AuthenticationToken authenticationToken)  {
+    // 这里是检测是否配置Realm
+	this.assertRealmsConfigured();
+	Collection<Realm> realms = this.getRealms();
+    // 判断如果realm的数量为一则执行doSingleRealmAuthentication反之 doMultiRealmAuthentication
+	return realms.size() == 1 ? 	this.doSingleRealmAuthentication((Realm)realms.iterator().next(), authenticationToken) : this.doMultiRealmAuthentication(realms, authenticationToken);
+    }
+```
+
+6，这里只配置了一个realm，所以会进入 `doSingleRealmAuthentication` 方法
+
+```java
+protected AuthenticationInfo doSingleRealmAuthentication(Realm realm, AuthenticationToken token) {
+    // 判断是否支持 token
+	if (!realm.supports(token)) {
+            String msg = "";
+            throw new UnsupportedTokenException(msg);
+        } else {
+        	// 这里会有认证信息
+            AuthenticationInfo info = realm.getAuthenticationInfo(token);
+            if (info == null) {
+                String msg = "";
+                throw new UnknownAccountException(msg);
+            } else {
+                return info;
+            }
+        }
+}
+```
+
+7，继续追踪 `getAuthenticationInfo` 方法
+
+```java
+public final AuthenticationInfo getAuthenticationInfo(AuthenticationToken token)  {
+    // 从缓存中拿token
+    AuthenticationInfo info = this.getCachedAuthenticationInfo(token);
+    if (info == null) {
+    	info = this.doGetAuthenticationInfo(token);
+    }  
+}
+```
+
+8，继续追踪 `doGetAuthenticationInfo` 方法
+
+```java
+protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token)  {
+    // 获取token
+    UsernamePasswordToken upToken = (UsernamePasswordToken)token;
+    // 获取用户名，这里才进行到了用户名的校验
+    SimpleAccount account = this.getUser(upToken.getUsername());
+    if (account != null) {
+        // 判断是否加锁
+        if (account.isLocked()) {
+        	throw new LockedAccountException("");
+        }
+		// 判断是否过期
+        if (account.isCredentialsExpired()) {
+            String msg = "";
+            throw new ExpiredCredentialsException(msg);
+        }
+    }
+    return account;
+}
+```
+
+9，跳出这个方法，回到  `AuthenticatingRealm`  的  `getAuthenticationInfo`  方法，接下来就是对密码的判断
+
+```java
+if (info != null) {
+	this.assertCredentialsMatch(token, info);
+} else {
+	log.debug("", token);
+}
+```
+
+10，追踪到 `assertCredentialsMatch`类中
+
+```java
+protected void assertCredentialsMatch(AuthenticationToken token, AuthenticationInfo info) {
+    CredentialsMatcher cm = this.getCredentialsMatcher();
+    if (cm != null) {
+        // 这里就判断密码
+        if (!cm.doCredentialsMatch(token, info)) {
+            String msg = "";
+            throw new IncorrectCredentialsException(msg);
+        }
+    } else {
+        throw new AuthenticationException("");
+    }
+}
+```
+
+
+
+从第八，九步可以知道，当需要我们自己去判断自己的Realm时，就需要继承`AuthorizingRealm`，实现指定的方法来进行判断，密码的校验是交给`shiro`自动完成
+
+`SimpleAccountRealm` 继承了 `AuthorizingRealm` 实现了用户的认证和授权
+
+意思是，自己的认证规则也是需要继承 `AuthorizingRealm`
+
+
+
+### 5，自定义Realm(❤)
+
+上边的程序使用的是`Shiro`自带的`IniRealm`，`IniRealm`从`ini`配置文件中读取用户的信息，大部分情况下需要从系统的数据库中读取用户信息，所以需要自定义realm。
+
+
+
+**根据认证源码认证使用的是`SimpleAccountRealm`**
+
+
 
 `SimpleAccountRealm的部分源码中有两个方法一个是 认证 一个是 授权`,
 
 ```java
 public class SimpleAccountRealm extends AuthorizingRealm {
-		//.......省略
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-        UsernamePasswordToken upToken = (UsernamePasswordToken) token;
-        SimpleAccount account = getUser(upToken.getUsername());
-
-        if (account != null) {
-
-            if (account.isLocked()) {
-                throw new LockedAccountException("Account [" + account + "] is locked.");
-            }
-            if (account.isCredentialsExpired()) {
-                String msg = "The credentials for account [" + account + "] are expired";
-                throw new ExpiredCredentialsException(msg);
-            }
-
-        }
-
-        return account;
-    }
-
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        String username = getUsername(principals);
-        USERS_LOCK.readLock().lock();
-        try {
-            return this.users.get(username);
-        } finally {
-            USERS_LOCK.readLock().unlock();
-        }
-    }
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token)  {}
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {}
 }
 ```
 
-##### 3.自定义realm
+
+
+##### （1）自定义realm
 
 ```java
-/**
- * 自定义realm
- */
 public class CustomerRealm extends AuthorizingRealm {
-    //认证方法
+    //授权方法
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         return null;
     }
 
-    //授权方法
+    //认证方法
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token)  {
         String principal = (String) token.getPrincipal();
-        if("xiaochen".equals(principal)){
+        if("tjj".equals(principal)){
             return new SimpleAuthenticationInfo(principal,"123",this.getName());
         }
         return null;
@@ -238,7 +385,7 @@ public class CustomerRealm extends AuthorizingRealm {
 }
 ```
 
-##### 4.使用自定义Realm认证
+##### （2）测试
 
 ```java
 public class TestAuthenticatorCusttomerRealm {
@@ -254,53 +401,47 @@ public class TestAuthenticatorCusttomerRealm {
         Subject subject = SecurityUtils.getSubject();
         //创建token令牌
         UsernamePasswordToken token = new UsernamePasswordToken("xiaochen", "123");
-        try {
-            subject.login(token);//用户登录
-            System.out.println("登录成功~~");
-        } catch (UnknownAccountException e) {
-            e.printStackTrace();
-            System.out.println("用户名错误!!");
-        }catch (IncorrectCredentialsException e){
-            e.printStackTrace();
-            System.out.println("密码错误!!!");
-        }
-
+        subject.login(token);//用户登录
     }
 }
 ```
 
-### 4.6 使用MD5和Salt
+
+
+
+
+### 6，使用MD5和Salt
 
 > 实际应用是将盐和散列后的值存在数据库中，自动realm从数据库取出盐和加密后的值由shiro完成密码校验。
 
-##### 1.自定义md5+salt的realm
+##### （1）自定义md5+salt
 
 ```java
 /**
  * 自定义md5+salt realm
  */
 public class CustomerRealm extends AuthorizingRealm {
-    //认证方法
+    //授权方法
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         return null;
     }
 
-    //授权方法
+    //认证方法
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token)  {
         String principal = (String) token.getPrincipal();
         if("xiaochen".equals(principal)){
             String password = "3c88b338102c1a343bcb88cd3878758e";
             String salt = "Q4F%";
             return new SimpleAuthenticationInfo(principal,password, 
-                                                ByteSource.Util.bytes(salt),this.getName());
+                            ByteSource.Util.bytes(salt),this.getName());
         }
         return null;
-    }
+}
 ```
 
-##### 2.使用md5 + salt 认证
+##### （2）使用
 
 ```java
 public class TestAuthenticatorCusttomerRealm {
@@ -322,44 +463,44 @@ public class TestAuthenticatorCusttomerRealm {
         Subject subject = SecurityUtils.getSubject();
         //创建token令牌
         UsernamePasswordToken token = new UsernamePasswordToken("xiaochen", "123");
-        try {
-            subject.login(token);//用户登录
-            System.out.println("登录成功~~");
-        } catch (UnknownAccountException e) {
-            e.printStackTrace();
-            System.out.println("用户名错误!!");
-        }catch (IncorrectCredentialsException e){
-            e.printStackTrace();
-            System.out.println("密码错误!!!");
-        }
-
+        subject.login(token);//用户登录
     }
 }
 ```
 
 -----
 
-## 5. shiro中的授权
 
-### 5.1 授权
 
-授权，即访问控制，控制谁能访问哪些资源。主体进行身份认证后需要分配权限方可访问系统的资源，对于某些资源没有权限是无法访问的。
+## 五，授权
 
-### 5.2 关键对象
+### 1，授权
+
+授权，即访问控制，控制谁能访问哪些资源。
+
+主体进行身份认证后需要分配权限方可访问系统的资源，对于某些资源没有权限是无法访问的。
+
+### 2，关键对象
 
 **授权可简单理解为who对what(which)进行How操作：**
 
 `Who，即主体（Subject）`，主体需要访问系统中的资源。
 
-`What，即资源（Resource)`，如系统菜单、页面、按钮、类方法、系统商品信息等。资源包括`资源类型`和`资源实例`，比如`商品信息为资源类型`，类型为t01的商品为`资源实例`，编号为001的商品信息也属于资源实例。
+`What，即资源（Resource)`，如系统菜单、页面、按钮、类方法、系统商品信息等。资源包括`资源类型`和`资源实例`
 
 `How，权限/许可（Permission)`，规定了主体对资源的操作许可，权限离开资源没有意义，如用户查询权限、用户添加权限、某个类方法的调用权限、编号为001用户的修改权限等，通过权限可知主体对哪些资源都有哪些操作许可。
 
-### 5.3 授权流程
+### 3，授权流程（▲）
 
-![image-20200521230705964](Shiro 实战教程.assets/image-20200521230705964.png)
+1，用户携带`token`请求，如果有`token`就放行
 
-### 5.4 授权方式
+2，判断`token`是否合法
+
+3，不合法就认证失败，合法就放行
+
+4，判断是否具有权限，没有就报错，有就访问资源
+
+### 4，授权方式
 
 - **基于角色的访问控制**
   
@@ -386,9 +527,17 @@ public class TestAuthenticatorCusttomerRealm {
   
     
 
-### 5.5 权限字符串 
+### 5，权限字符串 
 
-​		权限字符串的规则是：**资源标识符：操作：资源实例标识符**，意思是对哪个资源的哪个实例具有什么操作，“:”是资源/操作/实例的分割符，权限字符串也可以使用*通配符。
+权限字符串的规则是：
+
+```
+资源标识符：操作：资源实例标识符
+```
+
+****
+
+意思是对哪个资源的哪个实例具有什么操作，“:”是资源/操作/实例的分割符，权限字符串也可以使用*通配符。
 
 例子：
 
@@ -396,7 +545,9 @@ public class TestAuthenticatorCusttomerRealm {
 - 用户修改实例001的权限：user:update:001
 - 用户实例001的所有权限：user:*：001
 
-### 5.6 shiro中授权编程实现方式
+
+
+### 6，shiro中授权编程实现方式
 
 - **编程式**
 
@@ -428,40 +579,34 @@ public class TestAuthenticatorCusttomerRealm {
   注意: Thymeleaf 中使用shiro需要额外集成!
   ```
 
-- 
 
-### 5.7 开发授权
+### 7，入门
 
-##### 1.realm的实现
+##### （1）realm的实现
 
 ```java
 public class CustomerRealm extends AuthorizingRealm {
-    //认证方法
+    //授权方法
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
+        // 获取主用户名
         String primaryPrincipal = (String) principals.getPrimaryPrincipal();
-        System.out.println("primaryPrincipal = " + primaryPrincipal);
-
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
-
         simpleAuthorizationInfo.addRole("admin");
-
         simpleAuthorizationInfo.addStringPermission("user:update:*");
         simpleAuthorizationInfo.addStringPermission("product:*:*");
-
-
         return simpleAuthorizationInfo;
     }
 
-    //授权方法
+    //认证方法
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token)  {
         String principal = (String) token.getPrincipal();
         if("xiaochen".equals(principal)){
             String password = "3c88b338102c1a343bcb88cd3878758e";
             String salt = "Q4F%";
             return new SimpleAuthenticationInfo(principal,password, 
-                                                ByteSource.Util.bytes(salt),this.getName());
+                  ByteSource.Util.bytes(salt),this.getName());
         }
         return null;
     }
@@ -469,7 +614,7 @@ public class CustomerRealm extends AuthorizingRealm {
 }
 ```
 
-##### 2.授权
+##### （2）授权
 
 ```java
 public class TestAuthenticatorCusttomerRealm {
@@ -491,19 +636,12 @@ public class TestAuthenticatorCusttomerRealm {
         Subject subject = SecurityUtils.getSubject();
         //创建token令牌
         UsernamePasswordToken token = new UsernamePasswordToken("xiaochen", "123");
-        try {
-            subject.login(token);//用户登录
-            System.out.println("登录成功~~");
-        } catch (UnknownAccountException e) {
-            e.printStackTrace();
-            System.out.println("用户名错误!!");
-        }catch (IncorrectCredentialsException e){
-            e.printStackTrace();
-            System.out.println("密码错误!!!");
-        }
-        //认证通过
+        subject.login(token);//用户登录
+          
+        // 认证通过
         if(subject.isAuthenticated()){
-            //基于角色权限管理
+            // 基于角色权限管理
+            // 每执行一次就会访问一次认证方法
             boolean admin = subject.hasRole("admin");
             System.out.println(admin);
 
@@ -515,17 +653,15 @@ public class TestAuthenticatorCusttomerRealm {
 }
 ```
 
-## 6.整合SpringBoot项目实战
 
-### 6.0 整合思路
 
-![image-20200525185630463](Shiro 实战教程.assets/image-20200525185630463.png)
+## 六，整合SpringBoot项目实战
 
-### 6.1 创建springboot项目
+### 1，整合思路
 
-![image-20200523100842032](Shiro 实战教程.assets/image-20200523100842032.png)
+（需要观看）
 
-### 6.2 引入shiro依赖
+### 2，依赖
 
 ```xml
 <dependency>
@@ -533,70 +669,144 @@ public class TestAuthenticatorCusttomerRealm {
   <artifactId>shiro-spring-boot-starter</artifactId>
   <version>1.5.3</version>
 </dependency>
+<!--引入JSP解析依赖-->
+<dependency>
+     <groupId>org.apache.tomcat.embed</groupId>
+     <artifactId>tomcat-embed-jasper</artifactId>
+</dependency>
+<dependency>
+     <groupId>jstl</groupId>
+     <artifactId>jstl</artifactId>
+     <version>1.2</version>
+</dependency>
 ```
 
-### 6.3 配置shiro环境
+### 3，配置文件
 
-##### 0.创建配置类
+```properties
+server.port=8080
+server.servlet.context-path=/shiro
+spring.application.name=shiro
 
-![image-20200523101256446](Shiro 实战教程.assets/image-20200523101256446.png)
+spring.mvc.view.prefix=/
+spring.mvc.view.suffix=.jsp
+```
 
-##### 1.配置shiroFilterFactoryBean
+
+
+### 4，配置shiro环境❤
+
+##### （1）配置类
+
+配置后访问`index.jsp`认证不通过就会跳转到登录界面
+
+```java
+/**
+ * 用来整合shiro框架相关的配置类
+ */
+@Configuration
+public class ShiroConfig {
+
+    //1.创建shiroFilter  //负责拦截所有请求
+    @Bean
+    public ShiroFilterFactoryBean getShiroFilterFactoryBean(DefaultWebSecurityManager defaultWebSecurityManager){
+
+        ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
+        //给filter设置安全管理器
+        shiroFilterFactoryBean.setSecurityManager(defaultWebSecurityManager);
+
+        //配置系统受限资源
+        //配置系统公共资源
+        Map<String,String> map = new HashMap<String,String>();
+
+        map.put("/index.jsp","authc");//authc 请求这个资源需要认证和授权
+
+        //默认认证界面路径---当认证不通过时跳转
+        shiroFilterFactoryBean.setLoginUrl("/login.jsp");
+        shiroFilterFactoryBean.setFilterChainDefinitionMap(map);
+
+        return shiroFilterFactoryBean;
+    }
+    //3.创建自定义realm
+    @Bean
+    public CustomerRealm getRealm(){
+        CustomerRealm customerRealm = new CustomerRealm();
+        return customerRealm;
+    }
+    
+    
+    //2.创建安全管理器
+    @Bean
+    public DefaultWebSecurityManager getDefaultWebSecurityManager(CustomerRealm customerRealm){
+        DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager();
+        //给安全管理器设置
+        //设置时用原来的配置出了错误
+        //如果这个方法的参数是Realm，那么就会注入错误，默认会注入一个Realm
+        //既然自定义了一个Realm，那么就使用自己的 CustomerRealm
+        //但是，也很有可能会是shiro.ini文件的原因
+        //因为我创建了shiro.ini文件，所以shiro会创建默认的realm，springboot则注入
+        //以上的猜想是正确的
+        defaultWebSecurityManager.setRealm(customerRealm);
+        return defaultWebSecurityManager;
+    }
+}
+```
+
+版本二(因为以上的BUG)
 
 ```java
 @Bean
-public ShiroFilterFactoryBean getShiroFilterFactoryBean(SecurityManager securityManager){
-  //创建shiro的filter
-  ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
-  //注入安全管理器
-  shiroFilterFactoryBean.setSecurityManager(securityManager);
- 	
-  return shiroFilterFactoryBean;
-}
-```
+public DefaultWebSecurityManager getDefaultWebSecurityManager(Realm realm){}
 
-##### 2.配置WebSecurityManager
-
-```java
-@Bean
-public DefaultWebSecurityManager getSecurityManager(Realm realm){
-  DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager();
-  defaultWebSecurityManager.setRealm(realm);
-  return defaultWebSecurityManager;
-}
-```
-
-##### 3.创建自定义realm
-
-![image-20200523101402213](Shiro 实战教程.assets/image-20200523101402213.png)
-
-```java
-public class CustomerRealm extends AuthorizingRealm {
-    //处理授权
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        return null;
-    }
-		//处理认证
-    @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws 
-      																																		AuthenticationException {
-        return null;
-    }
-}
-```
-
-##### 4.配置自定义realm
-
-```java
-//创建自定义realm
 @Bean
 public Realm getRealm(){
-  return new CustomerRealm();
+    CustomerRealm customerRealm = new CustomerRealm();
+    return customerRealm;
 }
 ```
 
-##### 5.编写控制器跳转至index.html
+
+
+配置`shiroFilterFactoryBean`
+
+（需要听 p14）
+
+```java
+@Bean
+public ShiroFilterFactoryBean getShiroFilterFactoryBean(DefaultWebSecurityManager Manage){
+    
+}
+```
+
+
+
+配置`WebSecurityManager`
+
+```java
+@Bean
+public DefaultWebSecurityManager getSecurityManager(Realm realm){}
+```
+
+
+
+创建自定义`realm`
+
+```java
+public class CustomerRealm extends AuthorizingRealm {}
+```
+
+
+
+配置自定义`realm`
+
+```java
+@Bean
+public Realm getRealm(){}
+```
+
+
+
+##### （2）控制器
 
 ```java
 @Controller
@@ -609,18 +819,15 @@ public class IndexController {
 }
 ```
 
-![image-20200523101733157](Shiro 实战教程.assets/image-20200523101733157.png)
 
-![image-20200523101857528](Shiro 实战教程.assets/image-20200523101857528.png)
 
-##### 6.启动springboot应用访问index
+##### （3）启动
 
-![image-20200523101955121](Shiro 实战教程.assets/image-20200523101955121.png)
+- 注意: 默认在配置好shiro环境后默认环境中没有对项目中任何资源进行权限控制,所有现在项目中所有资源都可以通过路径访问
 
-- 注意:
-  - **默认在配置好shiro环境后默认环境中没有对项目中任何资源进行权限控制,所有现在项目中所有资源都可以通过路径访问**
 
-##### 7.加入权限控制
+
+##### （4）加入权限控制
 
 - 修改ShiroFilterFactoryBean配置
 
@@ -633,15 +840,16 @@ public class IndexController {
   shiroFilterFactoryBean.setFilterChainDefinitionMap(map);
   ```
 
-  ![image-20200523102303320](Shiro 实战教程.assets/image-20200523102303320.png)
 
-  - **/\**** 代表拦截项目中一切资源  **authc** 代表shiro中的一个filter的别名,详细内容看文档的shirofilter列表
+`**` 代表拦截项目中一切资源 
 
-##### 8.重启项目访问查看
+`authc`代表`shiro`的一个filter的别名,详细内容看`shirofilter`列表
 
-![image-20200523102831750](Shiro 实战教程.assets/image-20200523102831750.png)
 
-### 6.4 常见过滤器
+
+
+
+### 5，常见过滤器❤
 
 - 注意: **shiro提供和多个默认的过滤器，我们可以用这些过滤器来配置控制指定url的权限：**
 
@@ -659,11 +867,11 @@ public class IndexController {
 | ssl               | SslFilter                      | 需要https请求才能访问                                        |
 | user              | UserFilter                     | 需要已登录或“记住我”的用户才能访问                           |
 
-### 6.5 认证实现
 
-##### 1. 在login.jsp中开发认证界面
 
-![image-20200526082345776](Shiro 实战教程.assets/image-20200526082345776.png)
+### 6，验证认证
+
+##### （1）认证界面
 
 ```html
 <form action="${pageContext.request.contextPath}/user/login" method="post">
@@ -673,7 +881,7 @@ public class IndexController {
 </form>
 ```
 
-##### 2. 开发controller
+##### （2）controller
 
 ```java
 @Controller
@@ -688,6 +896,7 @@ public class UserController {
   @RequestMapping("login")
   public String login(String username,String password){
     //获取主体对象
+    //在认证过程中使用subject.login进行认证
     Subject subject = SecurityUtils.getSubject();
     try {
       subject.login(new UsernamePasswordToken(username,password));
@@ -704,9 +913,9 @@ public class UserController {
 }
 ```
 
-- **在认证过程中使用subject.login进行认证**
 
-##### 3.开发realm中返回静态数据(未连接数据库)
+
+##### （3）测试
 
 ```java
 @Override
@@ -721,32 +930,24 @@ public class UserController {
 }
 ```
 
-##### 4.启动项目以realm中定义静态数据进行认证
 
-![image-20200526082550343](Shiro 实战教程.assets/image-20200526082550343.png)
 
-![image-20200526082639318](Shiro 实战教程.assets/image-20200526082639318.png)
 
-![image-20200526082620621](Shiro 实战教程.assets/image-20200526082620621.png)
 
-- **认证功能没有md5和随机盐的认证就实现啦**
+### 7，退出认证
 
-### 6.6 退出认证
+##### （1）退出
 
-##### 1.开发页面退出连接
+```html
+<a href="${pageContext.request.contextPath}/user/logout">退出登录</a>
+```
 
-![image-20200526082851800](Shiro 实战教程.assets/image-20200526082851800.png)
-
-##### 2.开发controller
+##### （2）controller
 
 ```java
 @Controller
 @RequestMapping("user")
 public class UserController {
-  /**
-    * 退出登录
-    *
-    */
   @RequestMapping("logout")
   public String logout(){
     Subject subject = SecurityUtils.getSubject();
@@ -756,19 +957,15 @@ public class UserController {
 }
 ```
 
-##### 3.修改退出连接访问退出路径
 
-![image-20200526083056062](Shiro 实战教程.assets/image-20200526083056062.png)
 
-##### 4.退出之后访问受限资源立即返回认证界面
 
-![image-20200526083148253](Shiro 实战教程.assets/image-20200526083148253.png)
 
-### 6.7 MD5、Salt的认证实现
+### 七，MD5、Salt的认证实现❤
 
-#### 1.开发数据库注册
+#### 1，数据库
 
-##### 0.开发注册界面
+#### 2，注册界面
 
 ```html
 <h1>用户注册</h1>
@@ -779,9 +976,7 @@ public class UserController {
 </form>
 ```
 
-![image-20200526200230982](Shiro 实战教程.assets/image-20200526200230982.png)
-
-##### 1.创建数据表结构
+#### 3，数据表
 
 ```sql
 SET NAMES utf8mb4;
@@ -801,9 +996,9 @@ CREATE TABLE `t_user` (
 SET FOREIGN_KEY_CHECKS = 1;
 ```
 
-![image-20200526200425569](Shiro 实战教程.assets/image-20200526200425569.png)
 
-##### 2.项目引入依赖
+
+#### 4，依赖
 
 ```xml
 <!--mybatis相关依赖-->
@@ -820,7 +1015,6 @@ SET FOREIGN_KEY_CHECKS = 1;
   <version>5.1.38</version>
 </dependency>
 
-
 <!--druid-->
 <dependency>
   <groupId>com.alibaba</groupId>
@@ -829,7 +1023,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 </dependency>
 ```
 
-##### 3.配置application.properties配置文件
+
+
+#### 5，配置文件
 
 ```properties
 server.port=8888
@@ -838,6 +1034,7 @@ spring.application.name=shiro
 
 spring.mvc.view.prefix=/
 spring.mvc.view.suffix=.jsp
+
 #新增配置
 spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
 spring.datasource.driver-class-name=com.mysql.jdbc.Driver
@@ -845,15 +1042,13 @@ spring.datasource.url=jdbc:mysql://localhost:3306/shiro?characterEncoding=UTF-8
 spring.datasource.username=root
 spring.datasource.password=root
 
-
 mybatis.type-aliases-package=com.baizhi.springboot_jsp_shiro.entity
 mybatis.mapper-locations=classpath:com/baizhi/mapper/*.xml
-
 ```
 
-![image-20200526200558712](Shiro 实战教程.assets/image-20200526200558712.png)
 
-##### 4.创建entity
+
+#### 6，实体类
 
 ```java
 @Data
@@ -868,7 +1063,7 @@ public class User {
 }
 ```
 
-##### 5.创建DAO接口
+#### 7，DAO
 
 ```java
 @Mapper
@@ -877,15 +1072,21 @@ public interface UserDAO {
 }
 ```
 
-##### 6.开发mapper配置文件
+#### 8，mapper映射
 
 ```xml
-<insert id="save" parameterType="User" useGeneratedKeys="true" keyProperty="id">
-  insert into t_user values(#{id},#{username},#{password},#{salt})
-</insert>
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lut.dao.UserDao">
+    <insert id="save" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        insert into t_user values(#{id},#{username},#{password},#{salt})
+    </insert>
+</mapper>
 ```
 
-##### 7.开发service接口
+#### 9，service
 
 ```java
 public interface UserService {
@@ -894,7 +1095,7 @@ public interface UserService {
 }
 ```
 
-##### 8.创建salt工具类
+#### 10，salt工具类
 
 ```java
 public class SaltUtils {
@@ -915,7 +1116,7 @@ public class SaltUtils {
 }
 ```
 
-##### 9.开发service实现类
+#### 11，service实现
 
 ```java
 @Service
@@ -940,7 +1141,7 @@ public class UserServiceImpl implements UserService {
 }
 ```
 
-##### 10.开发Controller
+#### 12，Controller
 
 ```java
 @Controller
@@ -966,29 +1167,27 @@ public class UserController {
 }
 ```
 
-##### 11.启动项目进行注册
-
-![image-20200526200946730](Shiro 实战教程.assets/image-20200526200946730.png)
-
-----
+##### 
 
 
 
-#### 2.开发数据库认证
 
-##### 0.开发DAO
+
+#### 12，数据库认证
+
+> 访问数据库进行认证
+
+##### （1）开发DAO
 
 ```java
 @Mapper
 public interface UserDAO {
-
-    void save(User user);
-		//根据身份信息认证的方法
+	//根据身份信息认证的方法
     User findByUserName(String username);
 }
 ```
 
-##### 1.开发mapper配置文件
+##### （2）mapper
 
 ```xml
 <select id="findByUserName" parameterType="String" resultType="User">
@@ -997,7 +1196,7 @@ public interface UserDAO {
 </select>
 ```
 
-##### 2.开发Service接口
+##### （3）Service
 
 ```java
 public interface UserService {
@@ -1008,7 +1207,9 @@ public interface UserService {
 }
 ```
 
-##### 3.开发Service实现类
+
+
+##### （4）Service实现
 
 ```java
 
@@ -1024,21 +1225,19 @@ public class UserServiceImpl implements UserService {
 }
 ```
 
-##### 4.开发在工厂中获取bean对象的工具类
+
+
+##### （5）获取bean对象的工具类
 
 ```java
-
 @Component
 public class ApplicationContextUtils implements ApplicationContextAware {
-
+    
     private static ApplicationContext context;
-
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.context = applicationContext;
     }
-
-
     //根据bean名字获取工厂中指定bean 对象
     public static Object getBean(String beanName){
         return context.getBean(beanName);
@@ -1046,7 +1245,9 @@ public class ApplicationContextUtils implements ApplicationContextAware {
 }
 ```
 
-##### 5.修改自定义realm
+
+
+##### （6）修改自定义realm
 
 ```java
  @Override
@@ -1055,7 +1256,11 @@ public class ApplicationContextUtils implements ApplicationContextAware {
 
         //根据身份信息
         String principal = (String) token.getPrincipal();
-        //在工厂中获取service对象
+        /**
+        	在工厂中获取service对象
+        	应该是采用这种方式才不会重新注入
+        	springboot会破坏单例模式吗？
+        **/
         UserService userService = (UserService) ApplicationContextUtils.getBean("userService");
 				//根据身份信息查询
         User user = userService.findByUserName(principal);
@@ -1069,7 +1274,14 @@ public class ApplicationContextUtils implements ApplicationContextAware {
     }
 ```
 
-##### 6.修改ShiroConfig中realm使用凭证匹配器以及hash散列
+
+
+##### （7）修改`realm`
+
+> ##### 修改`ShiroConfig`中`realm`使用凭证匹配器以及hash散列
+>
+
+> 配置这个有什么用？
 
 ```java
 @Bean
@@ -1086,15 +1298,16 @@ public Realm getRealm(){
 }
 ```
 
-![image-20200526204958726](Shiro 实战教程.assets/image-20200526204958726.png)
 
-### 6.8 授权实现
 
-##### 0.页面资源授权
+### 八，授权实现
+
+##### 页面资源授权
+
+> 这个shiro是做什么用的
 
 ```jsp
 <%@taglib prefix="shiro" uri="http://shiro.apache.org/tags" %>
-
 <shiro:hasAnyRoles name="user,admin">
         <li><a href="">用户管理</a>
             <ul>
@@ -1120,7 +1333,9 @@ public Realm getRealm(){
         </shiro:hasRole>
 ```
 
-##### 1.代码方式授权
+
+
+##### 代码方式授权
 
 ```java
 @RequestMapping("save")
@@ -1140,9 +1355,11 @@ public String save(){
 }
 ```
 
-![image-20200527203343928](Shiro 实战教程.assets/image-20200527203343928.png)
 
-##### 2.方法调用授权
+
+##### 方法调用授权
+
+> 这几个注解有什么用？
 
 - @RequiresRoles               用来基于角色进行授权
 - @RequiresPermissions    用来基于权限进行授权
@@ -1157,13 +1374,11 @@ public String save(){
 }
 ```
 
-![image-20200527203415114](Shiro 实战教程.assets/image-20200527203415114.png)
+
 
 ----
 
-##### 3.授权数据持久化
-
-![image-20200527204839080](Shiro 实战教程.assets/image-20200527204839080.png)
+##### 数据表
 
 ```sql
 SET NAMES utf8mb4;
@@ -1230,7 +1445,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 ----
 
-##### 4.创建dao方法
+##### dao
 
 ```java
  //根据用户名查询所有角色
@@ -1239,7 +1454,7 @@ User findRolesByUserName(String username);
 List<Perms> findPermsByRoleId(String id);
 ```
 
-##### 5.mapper实现
+##### mapper
 
 ```xml
 <resultMap id="userMap" type="User">
@@ -1272,7 +1487,7 @@ List<Perms> findPermsByRoleId(String id);
 </select>
 ```
 
-##### 6.Service接口
+##### Service
 
 ```java
 //根据用户名查询所有角色
@@ -1281,7 +1496,7 @@ User findRolesByUserName(String username);
 List<Perms> findPermsByRoleId(String id);
 ```
 
-##### 7.Service实现
+##### Service实现
 
 ```java
 @Override
@@ -1295,7 +1510,17 @@ public User findRolesByUserName(String username) {
 }
 ```
 
-##### 8.修改自定义realm
+
+
+##### 修改realm
+
+> **注意：**如果你创建了一个用户，并为这个用户授予了一个角色，但这个角色并未关联任何的 授权字符串，那么调用数据库获得的结果是 
+>
+> List<Perms> perms=[null]，
+>
+> 此时 perms已经被初始化，里面只有一个属性null，使用判空的方法无法判别，此时继续遍历会报出空指针异常，
+>
+> 此时应当添加判断条件 perms.get(0)!=null
 
 ```java
 public class CustomerRealm extends AuthorizingRealm {
@@ -1327,25 +1552,28 @@ public class CustomerRealm extends AuthorizingRealm {
 }
 ```
 
-![image-20200527213821611](Shiro 实战教程.assets/image-20200527213821611.png)
 
-##### 9.启动测试
+
+
 
 ---
 
-### 6.9 使用CacheManager
+### 九，使用CacheManager❤
 
-#### 1.Cache 作用
+Cache 作用
 
 - Cache 缓存: **计算机内存中一段数据**  
 - 作用: **用来减轻DB的访问压力,从而提高系统的查询效率**
 - 流程: 
 
-![image-20200530090656417](Shiro 实战教程.assets/image-20200530090656417.png)
+> 需要学习
+>
 
-#### 2.使用shiro中默认EhCache实现缓存
 
-##### 1.引入依赖
+
+#### 默认EhCache实现缓存
+
+##### 依赖
 
 ```xml
 <!--引入shiro和ehcache-->
@@ -1356,39 +1584,39 @@ public class CustomerRealm extends AuthorizingRealm {
 </dependency>
 ```
 
-##### 2.开启缓存
+##### 开启缓存
 
 ```java
 //3.创建自定义realm
-    @Bean
-    public Realm getRealm(){
-        CustomerRealm customerRealm = new CustomerRealm();
-        //修改凭证校验匹配器
-        HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher();
-        //设置加密算法为md5
-        credentialsMatcher.setHashAlgorithmName("MD5");
-        //设置散列次数
-        credentialsMatcher.setHashIterations(1024);
-        customerRealm.setCredentialsMatcher(credentialsMatcher);
+@Bean
+public Realm getRealm(){
+    CustomerRealm customerRealm = new CustomerRealm();
+    //修改凭证校验匹配器
+    HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher();
+    //设置加密算法为md5
+    credentialsMatcher.setHashAlgorithmName("MD5");
+    //设置散列次数
+    credentialsMatcher.setHashIterations(1024);
+    customerRealm.setCredentialsMatcher(credentialsMatcher);
 
-        //开启缓存管理器
-        customerRealm.setCachingEnabled(true);
-        customerRealm.setAuthorizationCachingEnabled(true);
-        customerRealm.setAuthorizationCachingEnabled(true);
-        customerRealm.setCacheManager(new EhCacheManager());
-        return customerRealm;
-    }
+    //开启缓存管理器
+    customerRealm.setCachingEnabled(true);
+    customerRealm.setAuthorizationCachingEnabled(true);
+    customerRealm.setAuthorizationCachingEnabled(true);
+    customerRealm.setCacheManager(new EhCacheManager());
+    return customerRealm;
+}
 ```
 
-![image-20200529173859939](Shiro 实战教程.assets/image-20200529173859939.png)
-
-##### 3.启动刷新页面进行测试
+##### 测试
 
 - 注意:如果控制台没有任何sql展示说明缓存已经开启
 
-#### 3.shiro中使用Redis作为缓存实现
 
-##### 1.引入redis依赖
+
+#### 使用Redis作为缓存实现
+
+##### 依赖
 
 ```xml
 <!--redis整合springboot-->
@@ -1398,7 +1626,7 @@ public class CustomerRealm extends AuthorizingRealm {
 </dependency>
 ```
 
-##### 2.配置redis连接
+##### 配置
 
 ```properties
 spring.redis.port=6379
@@ -1406,9 +1634,7 @@ spring.redis.host=localhost
 spring.redis.database=0
 ```
 
-![image-20200530084616799](Shiro 实战教程.assets/image-20200530084616799.png)
-
-##### 3.启动redis服务
+##### 启动redis
 
 ```powershell
 ➜  bin ls
@@ -1417,9 +1643,11 @@ redis-benchmark redis-check-rdb redis-sentinel  redis-trib.rb
 ➜  bin ./redis-server redis.conf
 ```
 
-![image-20200530081954871](Shiro 实战教程.assets/image-20200530081954871.png)
 
-##### 4.开发RedisCacheManager
+
+##### 开发RedisCacheManager
+
+> 这个有什么用
 
 ```java
 public class RedisCacheManager implements CacheManager {
@@ -1431,10 +1659,11 @@ public class RedisCacheManager implements CacheManager {
 }
 ```
 
-##### 5.开RedisCache实现
+##### RedisCache实现
 
 ```java
-public class RedisCache<K,V> implements Cache<K,V> {
+//自定义redis缓存的实现
+public class RedisCache<k,v> implements Cache<k,v> {
 
     private String cacheName;
 
@@ -1446,30 +1675,28 @@ public class RedisCache<K,V> implements Cache<K,V> {
     }
 
     @Override
-    public V get(K k) throws CacheException {
-        System.out.println("获取缓存:"+ k);
-        return (V) getRedisTemplate().opsForHash().get(this.cacheName,k.toString());
+    public v get(k k) throws CacheException {
+        System.out.println("get key:"+k);
+        return (v) getRedisTemplate().opsForHash().get(this.cacheName,k.toString());
     }
 
     @Override
-    public V put(K k, V v) throws CacheException {
-        System.out.println("设置缓存key: "+k+" value:"+v);
+    public v put(k k, v v) throws CacheException {
+        System.out.println("put key: "+k);
+        System.out.println("put value:"+v);
         getRedisTemplate().opsForHash().put(this.cacheName,k.toString(),v);
         return null;
     }
 
     @Override
-    public V remove(K k) throws CacheException {
-        return (V) getRedisTemplate().opsForHash().delete(this.cacheName,k.toString());
-    }
-
-    @Override
     public v remove(k k) throws CacheException {
+        System.out.println("=============remove=============");
         return (v) getRedisTemplate().opsForHash().delete(this.cacheName,k.toString());
     }
 
     @Override
     public void clear() throws CacheException {
+        System.out.println("=============clear==============");
         getRedisTemplate().delete(this.cacheName);
     }
 
@@ -1494,23 +1721,11 @@ public class RedisCache<K,V> implements Cache<K,V> {
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         return redisTemplate;
     }
-
-
-    //封装获取redisTemplate
-    private RedisTemplate getRedisTemplate(){
-        RedisTemplate redisTemplate = (RedisTemplate) ApplicationContextUtils.getBean("redisTemplate");
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        return redisTemplate;
-    }
 }
+
 ```
 
-##### 6.启动项目测试发现报错
-
-![image-20200530100850618](Shiro 实战教程.assets/image-20200530100850618.png)
-
-![image-20200530100948598](Shiro 实战教程.assets/image-20200530100948598.png)
+##### 启动项目测试发现报错
 
 - 错误解释: **由于shiro中提供的simpleByteSource实现没有实现序列化,所有在认证时出现错误信息**
 
@@ -1546,19 +1761,85 @@ public class RedisCache<K,V> implements Cache<K,V> {
     }
     ```
 
-    ![image-20200530101301543](Shiro 实战教程.assets/image-20200530101301543.png)
 
-##### 7.再次启动测试,发现可以成功放入redis缓存
 
-![image-20200530101617692](Shiro 实战教程.assets/image-20200530101617692.png)
+
+
+### 十，注解使用
+
+注解的使用需要开启注解支持
+
+`@RequiresAuthentication`
+
+注解要求当前的`Subject`在身份验证后才能执行被注解修饰的方法
+
+类似于在身份认证的`controller`方法中，如果没有认证就无法执行
+
+```java
+public void updateAccount(Account userAccount) {
+    if (!SecurityUtils.getSubject().isAuthenticated()) {
+        throw new AuthorizationException(...);
+    }
+    ...
+}
+```
+
+
+
+`@RequiresGuest`
+
+要求`subject`是访客或者匿名用户的时候才能执行方法
+
+
+
+`@RequiresPermissions`
+
+注解要求当前`Subject`有一个或多个权限才能执行被注解标记的方法
+
+```java
+@RequiresPermissions("account:search")
+public void find(Account account) {}
+```
+
+类似于
+
+```java
+if (!subject.isPermitted("account:search")) {
+	throw new AuthorizationException(...);
+}
+// ....
+```
+
+
+
+`@RequiresRoles`
+
+注解要求当前`Subject`具有所指定的角色
+
+```java
+@RequiresRoles("admin")
+public void deleteUser(User user) {}
+```
+
+
+
+`@RequiresUser`
+
+注解要求要访问或调用被注解标记的类/实例/方法的应用程序用户是当前会话中具有已知身份的`Subject`，
+
+其通常是在当前会话期间进行身份验证或者从先前会话的`“RememberMe”`服务中记住
+
+
+
+
 
 ----
 
-#### 4. 加入验证码验证
+#### 验证码验证
 
-##### 0.开发页面加入验证码
+##### 验证码
 
-- 开发控制器
+- 控制器
 
   ```java
   @RequestMapping("getImage")
@@ -1574,13 +1855,268 @@ public class RedisCache<K,V> implements Cache<K,V> {
   }
   ```
 
-- 放行验证码
+- 验证码
 
-  ![image-20200530141757606](Shiro 实战教程.assets/image-20200530141757606.png)
+  ```JAVA
+  public class VerifyCodeUtils {
+      //使用到Algerian字体，系统里没有的话需要安装字体，字体只显示大写，去掉了1,0,i,o几个容易混淆的字符
+      public static final String VERIFY_CODES = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+      private static Random random = new Random();
+  
+  
+      /**
+       * 使用系统默认字符源生成验证码
+       * @param verifySize    验证码长度
+       * @return
+       */
+      public static String generateVerifyCode(int verifySize){
+          return generateVerifyCode(verifySize, VERIFY_CODES);
+      }
+      /**
+       * 使用指定源生成验证码
+       * @param verifySize    验证码长度
+       * @param sources   验证码字符源
+       * @return
+       */
+      public static String generateVerifyCode(int verifySize, String sources){
+          if(sources == null || sources.length() == 0){
+              sources = VERIFY_CODES;
+          }
+          int codesLen = sources.length();
+          Random rand = new Random(System.currentTimeMillis());
+          StringBuilder verifyCode = new StringBuilder(verifySize);
+          for(int i = 0; i < verifySize; i++){
+              verifyCode.append(sources.charAt(rand.nextInt(codesLen-1)));
+          }
+          return verifyCode.toString();
+      }
+  
+      /**
+       * 生成随机验证码文件,并返回验证码值
+       * @param w
+       * @param h
+       * @param outputFile
+       * @param verifySize
+       * @return
+       * @throws IOException
+       */
+      public static String outputVerifyImage(int w, int h, File outputFile, int verifySize) throws IOException{
+          String verifyCode = generateVerifyCode(verifySize);
+          outputImage(w, h, outputFile, verifyCode);
+          return verifyCode;
+      }
+  
+      /**
+       * 输出随机验证码图片流,并返回验证码值
+       * @param w
+       * @param h
+       * @param os
+       * @param verifySize
+       * @return
+       * @throws IOException
+       */
+      public static String outputVerifyImage(int w, int h, OutputStream os, int verifySize) throws IOException{
+          String verifyCode = generateVerifyCode(verifySize);
+          outputImage(w, h, os, verifyCode);
+          return verifyCode;
+      }
+  
+      /**
+       * 生成指定验证码图像文件
+       * @param w
+       * @param h
+       * @param outputFile
+       * @param code
+       * @throws IOException
+       */
+      public static void outputImage(int w, int h, File outputFile, String code) throws IOException{
+          if(outputFile == null){
+              return;
+          }
+          File dir = outputFile.getParentFile();
+          if(!dir.exists()){
+              dir.mkdirs();
+          }
+          try{
+              outputFile.createNewFile();
+              FileOutputStream fos = new FileOutputStream(outputFile);
+              outputImage(w, h, fos, code);
+              fos.close();
+          } catch(IOException e){
+              throw e;
+          }
+      }
+  
+      /**
+       * 输出指定验证码图片流
+       * @param w
+       * @param h
+       * @param os
+       * @param code
+       * @throws IOException
+       */
+      public static void outputImage(int w, int h, OutputStream os, String code) throws IOException{
+          int verifySize = code.length();
+          BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+          Random rand = new Random();
+          Graphics2D g2 = image.createGraphics();
+          g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+          Color[] colors = new Color[5];
+          Color[] colorSpaces = new Color[] { Color.WHITE, Color.CYAN,
+                  Color.GRAY, Color.LIGHT_GRAY, Color.MAGENTA, Color.ORANGE,
+                  Color.PINK, Color.YELLOW };
+          float[] fractions = new float[colors.length];
+          for(int i = 0; i < colors.length; i++){
+              colors[i] = colorSpaces[rand.nextInt(colorSpaces.length)];
+              fractions[i] = rand.nextFloat();
+          }
+          Arrays.sort(fractions);
+  
+          g2.setColor(Color.GRAY);// 设置边框色
+          g2.fillRect(0, 0, w, h);
+  
+          Color c = getRandColor(200, 250);
+          g2.setColor(c);// 设置背景色
+          g2.fillRect(0, 2, w, h-4);
+  
+          //绘制干扰线
+          Random random = new Random();
+          g2.setColor(getRandColor(160, 200));// 设置线条的颜色
+          for (int i = 0; i < 20; i++) {
+              int x = random.nextInt(w - 1);
+              int y = random.nextInt(h - 1);
+              int xl = random.nextInt(6) + 1;
+              int yl = random.nextInt(12) + 1;
+              g2.drawLine(x, y, x + xl + 40, y + yl + 20);
+          }
+  
+          // 添加噪点
+          float yawpRate = 0.05f;// 噪声率
+          int area = (int) (yawpRate * w * h);
+          for (int i = 0; i < area; i++) {
+              int x = random.nextInt(w);
+              int y = random.nextInt(h);
+              int rgb = getRandomIntColor();
+              image.setRGB(x, y, rgb);
+          }
+  
+          shear(g2, w, h, c);// 使图片扭曲
+  
+          g2.setColor(getRandColor(100, 160));
+          int fontSize = h-4;
+          Font font = new Font("Algerian", Font.ITALIC, fontSize);
+          g2.setFont(font);
+          char[] chars = code.toCharArray();
+          for(int i = 0; i < verifySize; i++){
+              AffineTransform affine = new AffineTransform();
+              affine.setToRotation(Math.PI / 4 * rand.nextDouble() * (rand.nextBoolean() ? 1 : -1), (w / verifySize) * i + fontSize/2, h/2);
+              g2.setTransform(affine);
+              g2.drawChars(chars, i, 1, ((w-10) / verifySize) * i + 5, h/2 + fontSize/2 - 10);
+          }
+  
+          g2.dispose();
+          ImageIO.write(image, "jpg", os);
+      }
+  
+      private static Color getRandColor(int fc, int bc) {
+          if (fc > 255)
+              fc = 255;
+          if (bc > 255)
+              bc = 255;
+          int r = fc + random.nextInt(bc - fc);
+          int g = fc + random.nextInt(bc - fc);
+          int b = fc + random.nextInt(bc - fc);
+          return new Color(r, g, b);
+      }
+  
+      private static int getRandomIntColor() {
+          int[] rgb = getRandomRgb();
+          int color = 0;
+          for (int c : rgb) {
+              color = color << 8;
+              color = color | c;
+          }
+          return color;
+      }
+  
+      private static int[] getRandomRgb() {
+          int[] rgb = new int[3];
+          for (int i = 0; i < 3; i++) {
+              rgb[i] = random.nextInt(255);
+          }
+          return rgb;
+      }
+  
+      private static void shear(Graphics g, int w1, int h1, Color color) {
+          shearX(g, w1, h1, color);
+          shearY(g, w1, h1, color);
+      }
+  
+      private static void shearX(Graphics g, int w1, int h1, Color color) {
+  
+          int period = random.nextInt(2);
+  
+          boolean borderGap = true;
+          int frames = 1;
+          int phase = random.nextInt(2);
+  
+          for (int i = 0; i < h1; i++) {
+              double d = (double) (period >> 1)
+                      * Math.sin((double) i / (double) period
+                      + (6.2831853071795862D * (double) phase)
+                      / (double) frames);
+              g.copyArea(0, i, w1, 1, (int) d, 0);
+              if (borderGap) {
+                  g.setColor(color);
+                  g.drawLine((int) d, i, 0, i);
+                  g.drawLine((int) d + w1, i, w1, i);
+              }
+          }
+  
+      }
+  
+      private static void shearY(Graphics g, int w1, int h1, Color color) {
+  
+          int period = random.nextInt(40) + 10; // 50;
+  
+          boolean borderGap = true;
+          int frames = 20;
+          int phase = 7;
+          for (int i = 0; i < w1; i++) {
+              double d = (double) (period >> 1)
+                      * Math.sin((double) i / (double) period
+                      + (6.2831853071795862D * (double) phase)
+                      / (double) frames);
+              g.copyArea(i, 0, 1, h1, 0, (int) d);
+              if (borderGap) {
+                  g.setColor(color);
+                  g.drawLine(i, (int) d, i, 0);
+                  g.drawLine(i, (int) d + h1, i, h1);
+              }
+  
+          }
+  
+      }
+      public static void main(String[] args) throws IOException {
+          //获取验证码
+          String s = generateVerifyCode(4);
+          //将验证码放入图片中
+          outputImage(260,60,new File("/Users/chenyannan/Desktop/安工资料/aa.jpg"),s);
+          System.out.println(s);
+      }
+  }
+  
+  ```
+
+  
 
 - 开发页面
 
-  ![image-20200530141828004](Shiro 实战教程.assets/image-20200530141828004.png)
+  ```HTML
+  请输入验证码: <input type="text" name="code"><img src="${pageContext.request.contextPath}/user/getImage" alt=""><br>
+  ```
+
+  
 
 - 修改认证流程
 
@@ -1715,7 +2251,11 @@ public class RedisCache<K,V> implements Cache<K,V> {
 
   ----
 
-## 7.Shiro整合springboot之thymeleaf权限控制
+
+
+
+
+## thymeleaf权限控制
 
 ### 1.引入扩展依赖
 
@@ -1814,7 +2354,6 @@ public ShiroDialect shiroDialect(){
 }
 ```
 
-![image-20200601210335151](Shiro 实战教程.assets/image-20200601210335151.png)
 
 
 
